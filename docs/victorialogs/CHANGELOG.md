@@ -18,6 +18,8 @@ according to [these docs](https://docs.victoriametrics.com/victorialogs/quicksta
 
 ## tip
 
+* BUGFIX: fix panic `BUG: bsm.bd must be empty` triggered by back-to-back full blocks during part merge. Background compaction could crash when the merger reused buffered block data without flushing it before the next full block arrived. See [#792](https://github.com/VictoriaMetrics/VictoriaLogs/issues/792).
+
 ## [v1.37.1](https://github.com/VictoriaMetrics/VictoriaLogs/releases/tag/v1.37.1)
 
 Released at 2025-11-01
