@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/bits"
+	"net/netip"
 	"strconv"
 	"strings"
 	"sync"
@@ -679,6 +680,19 @@ func tryIPv4Encoding(dstBuf []byte, dstValues, srcValues []string) ([]byte, []st
 
 // tryParseIPv4 tries parsing ipv4 from s.
 func tryParseIPv4(s string) (uint32, bool) {
+	if strings.IndexByte(s, '.') < 0 {
+		// Fast path - the entry isn't IPv4.
+		return 0, false
+	}
+	addr, err := netip.ParseAddr(s)
+	if err != nil || !addr.Is4() {
+		return 0, false
+	}
+	ip4 := addr.As4()
+	return uint32(ip4[0])<<24 | uint32(ip4[1])<<16 | uint32(ip4[2])<<8 | uint32(ip4[3]), true
+}
+
+func oldTryParseIPv4(s string) (uint32, bool) {
 	if len(s) < len("1.1.1.1") || len(s) > len("255.255.255.255") || strings.Count(s, ".") != 3 {
 		// Fast path - the entry isn't IPv4
 		return 0, false

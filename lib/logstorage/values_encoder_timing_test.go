@@ -84,6 +84,32 @@ func BenchmarkTryParseIPv4(b *testing.B) {
 	})
 }
 
+func BenchmarkOldTryParseIPv4(b *testing.B) {
+	a := []string{
+		"1.2.3.4",
+		"127.0.0.1",
+		"255.255.255.255",
+		"192.43.234.22",
+		"32.34.54.198",
+	}
+
+	b.SetBytes(int64(len(a)))
+	b.ReportAllocs()
+	b.RunParallel(func(pb *testing.PB) {
+		nSum := uint32(0)
+		for pb.Next() {
+			for _, s := range a {
+				n, ok := oldTryParseIPv4(s)
+				if !ok {
+					panic(fmt.Errorf("cannot parse ipv4 %q", s))
+				}
+				nSum += n
+			}
+		}
+		GlobalSink.Add(uint64(nSum))
+	})
+}
+
 func BenchmarkTryParseUint64(b *testing.B) {
 	a := []string{
 		"1234",
