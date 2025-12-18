@@ -692,63 +692,6 @@ func tryParseIPv4(s string) (uint32, bool) {
 	return uint32(ip4[0])<<24 | uint32(ip4[1])<<16 | uint32(ip4[2])<<8 | uint32(ip4[3]), true
 }
 
-func oldTryParseIPv4(s string) (uint32, bool) {
-	if len(s) < len("1.1.1.1") || len(s) > len("255.255.255.255") || strings.Count(s, ".") != 3 {
-		// Fast path - the entry isn't IPv4
-		return 0, false
-	}
-
-	var octets [4]byte
-	var v uint64
-	var ok bool
-
-	// Parse octet 1
-	n := strings.IndexByte(s, '.')
-	if n <= 0 || n > 3 {
-		return 0, false
-	}
-	v, ok = tryParseDateUint64(s[:n])
-	if !ok || v > 255 {
-		return 0, false
-	}
-	octets[0] = byte(v)
-	s = s[n+1:]
-
-	// Parse octet 2
-	n = strings.IndexByte(s, '.')
-	if n <= 0 || n > 3 {
-		return 0, false
-	}
-	v, ok = tryParseDateUint64(s[:n])
-	if !ok || v > 255 {
-		return 0, false
-	}
-	octets[1] = byte(v)
-	s = s[n+1:]
-
-	// Parse octet 3
-	n = strings.IndexByte(s, '.')
-	if n <= 0 || n > 3 {
-		return 0, false
-	}
-	v, ok = tryParseDateUint64(s[:n])
-	if !ok || v > 255 {
-		return 0, false
-	}
-	octets[2] = byte(v)
-	s = s[n+1:]
-
-	// Parse octet 4
-	v, ok = tryParseDateUint64(s)
-	if !ok || v > 255 {
-		return 0, false
-	}
-	octets[3] = byte(v)
-
-	ipv4 := encoding.UnmarshalUint32(octets[:])
-	return ipv4, true
-}
-
 func tryFloat64Encoding(dstBuf []byte, dstValues, srcValues []string) ([]byte, []string, valueType, uint64, uint64) {
 	u64s := encoding.GetUint64s(len(srcValues))
 	defer encoding.PutUint64s(u64s)
