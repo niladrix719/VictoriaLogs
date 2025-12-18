@@ -680,8 +680,8 @@ func tryIPv4Encoding(dstBuf []byte, dstValues, srcValues []string) ([]byte, []st
 
 // tryParseIPv4 tries parsing ipv4 from s.
 func tryParseIPv4(s string) (uint32, bool) {
-	if strings.IndexByte(s, '.') < 0 {
-		// Fast path - the entry isn't IPv4.
+	if len(s) < len("1.1.1.1") || len(s) > len("255.255.255.255") || strings.Count(s, ".") != 3 {
+		// Fast path - the entry isn't IPv4
 		return 0, false
 	}
 	addr, err := netip.ParseAddr(s)
