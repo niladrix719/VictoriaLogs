@@ -642,6 +642,63 @@ func (q *Query) CloneWithTimeFilter(timestamp, start, end int64) *Query {
 	return qCopy
 }
 
+// GetFirstNResultsQuery() returns a query for optimized querying of the first <limit> results
+// with the smallest _time values with an optional <offset>.
+//
+// The returned query is nil if q cannot be used for optimized querying of the first N results.
+func (q *Query) GetFirstNResultsQuery() (qOpt *Query, offset uint64, limit uint64) {
+	start, end := q.GetFilterTimeRange()
+	if !CanApplyLastNResultsOptimization(start, end) {
+		// It is faster to execute the query as is on such a small time range.
+		return nil, 0, 0
+	}
+
+	pipes := q.pipes
+
+	// Remember the trailing 'fields' and 'delete' pipes - they are moved in front of `sort` pipe below.
+	tailPipes := func() []pipe {
+		for i := len(pipes) - 1; i >= 0; i-- {
+			switch pipes[i].(type) {
+			case *pipeFields, *pipeDelete:
+				// Skip 'fields' and 'delete' pipes.
+			default:
+				return pipes[i+1:]
+			}
+		}
+		return pipes
+	}()
+	pipes = pipes[:len(pipes)-len(tailPipes)]
+	if len(pipes) == 0 {
+		return nil, 0, 0
+	}
+
+	// The query must end with one of the following pipes in order to be eligible for the optimization:
+	// - 'sort by (_time) offset <offset> limit <limit>'
+	// - 'first <limit> by (_time)'
+	// - 'last <limit> by (_time desc)'
+	pLast := pipes[len(pipes)-1]
+	offset, limit, ok := getOffsetLimitFromPipeForFirstN(pLast)
+	if !ok {
+		return nil, 0, 0
+	}
+
+	// Remove the `| sort ...` pipe from the query, add tailPipes and verify
+	// whether it can reliably return first N results with the smallest _time values.
+	// Verify the query doesn't clobber _time field, so its time range can be safely adjusted.
+	qCopy := q.Clone(q.GetTimestamp())
+	if len(qCopy.pipes) != len(q.pipes) {
+		return nil, 0, 0
+	}
+	qCopy.pipes = qCopy.pipes[:len(pipes)-1]
+	qCopy.pipes = append(qCopy.pipes, tailPipes...)
+	if !qCopy.CanReturnLastNResults() {
+		return nil, 0, 0
+	}
+
+	// The query is eligible for first N results optimization.
+	return qCopy, offset, limit
+}
+
 // GetLastNResultsQuery() returns a query for optimized querying of the last <limit> results with the biggest _time values with an optional <offset>.
 //
 // The returned query is nil if q cannot be used for optimized querying of the last N results.
@@ -715,7 +772,28 @@ func getOffsetLimitFromPipe(p pipe) (uint64, uint64, bool) {
 	}
 }
 
+func getOffsetLimitFromPipeForFirstN(p pipe) (uint64, uint64, bool) {
+	switch t := p.(type) {
+	case *pipeSort:
+		return getOffsetLimitFromPipeSortForFirstN(t)
+	case *pipeFirst:
+		return getOffsetLimitFromPipeSortForFirstN(t.ps)
+	case *pipeLast:
+		return getOffsetLimitFromPipeSortForFirstN(t.ps)
+	default:
+		return 0, 0, false
+	}
+}
+
 func getOffsetLimitFromPipeSort(ps *pipeSort) (uint64, uint64, bool) {
+	return getOffsetLimitFromPipeSortByTime(ps, true)
+}
+
+func getOffsetLimitFromPipeSortForFirstN(ps *pipeSort) (uint64, uint64, bool) {
+	return getOffsetLimitFromPipeSortByTime(ps, false)
+}
+
+func getOffsetLimitFromPipeSortByTime(ps *pipeSort, isDescExpected bool) (uint64, uint64, bool) {
 	if ps.limit <= 0 || ps.limit > 50_000 {
 		return 0, 0, false
 	}
@@ -738,7 +816,7 @@ func getOffsetLimitFromPipeSort(ps *pipeSort) (uint64, uint64, bool) {
 	if ps.isDesc {
 		isDesc = !isDesc
 	}
-	if !isDesc {
+	if isDesc != isDescExpected {
 		return 0, 0, false
 	}
 	return ps.offset, ps.limit, true
@@ -869,6 +947,12 @@ func (q *Query) addExtraFiltersNoSubqueries(filters []filter) {
 // AddPipeSortByTimeDesc adds `| sort (_time) desc` pipe to q.
 func (q *Query) AddPipeSortByTimeDesc() {
 	s := "sort by (_time) desc"
+	q.mustAppendPipe(s)
+}
+
+// AddPipeSortByTime adds `| sort (_time)` pipe to q.
+func (q *Query) AddPipeSortByTime() {
+	s := "sort by (_time)"
 	q.mustAppendPipe(s)
 }
 
