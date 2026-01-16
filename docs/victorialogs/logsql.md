@@ -767,7 +767,8 @@ See also:
 VictoriaLogs supports filtering logs by patterns with the `pattern_match("pattern")` filter. This filter matches logs where
 [`_msg` field](https://docs.victoriametrics.com/victorialogs/keyconcepts/#message-field) contains the given `"pattern"`.
 
-The filter can be applied to any given log field with the `log_field:pattern_match("pattern")` syntax.
+The filter can be applied to any given log field with the `log_field:pattern_match("pattern")` syntax. This also works for
+`pattern_match_prefix("pattern")` and `pattern_match_full("pattern")` filters.
 
 The `"pattern"` must contain the text to match, plus arbitrary number of the following placeholders:
 
@@ -786,6 +787,13 @@ For example, the following filter matches `_msg` field with the `<arbitrary_pref
 
 ```logsql
 pattern_match("user_id=<N>, ip=<IP4>, time=<DATETIME>")
+```
+
+If you need to match the given pattern at the beginning of the `_msg` field value, then use the `pattern_match_prefix("pattern")` filter.
+For example, the following filter matches log messages starting with datetime followed by the ` foo`:
+
+```logsql
+pattern_match_prefix("<DATETIME> foo")
 ```
 
 If you need to match the whole `_msg` field value, then use the `pattern_match_full("pattern")` filter.

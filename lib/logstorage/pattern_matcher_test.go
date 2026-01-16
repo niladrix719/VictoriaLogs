@@ -125,3 +125,34 @@ func TestPatternMatcherMatch(t *testing.T) {
 	f("xx<N>", "xxxxxxxxxxxxxxxx", false, false)
 	f("xx<N>", "xxxxxx123", false, true)
 }
+
+func TestPatternMatcherMatchPrefix(t *testing.T) {
+	f := func(pattern, s string, resultExpected bool) {
+		t.Helper()
+
+		pm := newPatternMatcher(pattern, false)
+		result := pm.MatchPrefix(s)
+		if result != resultExpected {
+			t.Fatalf("unexpected result; got %v; want %v", result, resultExpected)
+		}
+	}
+
+	// an empty pattern matches any string
+	f("", "", true)
+	f("", "foo", true)
+
+	// pattern without placeholders
+	f("foo", "foo", true)
+	f("foo", "foobar", true)
+	f("foo", "afoo", false)
+
+	// pattern with placeholders
+	f("<N>sec at <DATE>", "123sec at 2025-12-20", true)
+	f("<N>sec at <DATE>", "123sec at 2025-12-20 sss", true)
+	f("<N>sec at <DATE>", "3 123sec at 2025-12-20", false)
+	f("<N>sec at <DATE>", "123sec at 456 sss", false)
+
+	// regression: leading separator present many times but placeholder doesn't match after it
+	f("xx<N>", "xxxxxxxxxxxxxxxx", false)
+	f("xx<N>", "xx123", true)
+}

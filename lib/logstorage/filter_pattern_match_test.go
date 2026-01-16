@@ -94,6 +94,25 @@ func TestFilterPatternMatch(t *testing.T) {
 		testFilterMatchForColumns(t, columns, fp, "foo", nil)
 	})
 
+	t.Run("prefix", func(t *testing.T) {
+		columns := []column{
+			{
+				name: "foo",
+				values: []string{
+					"abc def",
+					"zzz abc def",
+				},
+			},
+		}
+
+		fp := &filterPatternMatch{
+			fieldName: "foo",
+			pm:        newPatternMatcher("abc", false),
+			isPrefix:  true,
+		}
+		testFilterMatchForColumns(t, columns, fp, "foo", []int{0})
+	})
+
 	t.Run("const-column", func(t *testing.T) {
 		columns := []column{
 			{

@@ -1657,6 +1657,9 @@ func TestParseQuery_Success(t *testing.T) {
 	// pattern_match_full filter
 	f(`pattern_match_full("<N> foo <DATE>, bar")`, `pattern_match_full("<N> foo <DATE>, bar")`)
 
+	// pattern_match_prefix filter
+	f(`pattern_match_prefix("<N> foo <DATE>, bar")`, `pattern_match_prefix("<N> foo <DATE>, bar")`)
+
 	// range filter
 	f(`range(1.234, 5656.43454)`, `range(1.234, 5656.43454)`)
 	f(`foo:range(-2343.344, 2343.4343)`, `foo:range(-2343.344, 2343.4343)`)
@@ -2512,6 +2515,10 @@ func TestParseQuery_Failure(t *testing.T) {
 	// invalid pattern_match
 	f(`pattern_match()`)
 	f(`pattern_match(`)
+
+	// invalid pattern_match_prefix
+	f(`pattern_match_prefix()`)
+	f(`pattern_match_prefix(`)
 
 	// invalid pattern_match_all
 	f(`pattern_match_all()`)
