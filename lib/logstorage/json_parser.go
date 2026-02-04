@@ -20,8 +20,11 @@ type JSONParser struct {
 	// or until the parser is returned to the pool with PutJSONParser() call.
 	Fields []Field
 
-	// p is used for fast JSON parsing
-	p fastjson.Parser
+	// s is used for fast JSON parsing
+	s fastjson.Scanner
+
+	// err contains parsing error
+	err error
 
 	// buf is used for holding the backing data for Fields
 	buf []byte
@@ -35,14 +38,13 @@ type JSONParser struct {
 }
 
 func (p *JSONParser) reset() {
+	p.err = nil
 	clear(p.Fields)
 	p.Fields = p.Fields[:0]
 
 	p.buf = p.buf[:0]
 
 	p.prefixBuf = p.prefixBuf[:0]
-	p.preserveKeys = nil
-	p.maxFieldNameLen = 0
 }
 
 // GetJSONParser returns JSONParser ready to parse JSON lines.
@@ -85,10 +87,11 @@ func (p *JSONParser) parseLogMessage(msg []byte, preserveKeys []string, maxField
 	p.reset()
 
 	msgStr := bytesutil.ToUnsafeString(msg)
-	v, err := p.p.Parse(msgStr)
+	v, err := p.s.Parse(msgStr)
 	if err != nil {
 		return err
 	}
+
 	o, err := v.Object()
 	if err != nil {
 		return err
@@ -200,4 +203,38 @@ func (p *JSONParser) appendLogField(k, value []byte) {
 		Name:  nameStr,
 		Value: valueStr,
 	})
+}
+
+func (p *JSONParser) init(msg []byte, preserveKeys []string, maxFieldNameLen int) {
+	p.s.InitBytes(msg)
+	p.maxFieldNameLen = maxFieldNameLen
+	p.preserveKeys = preserveKeys
+}
+
+func (p *JSONParser) Init(msg []byte, preserveKeys []string) {
+	p.init(msg, preserveKeys, maxFieldNameSize)
+}
+
+func (p *JSONParser) NextLogMessage() bool {
+	return p.nextLogMessage()
+}
+
+func (p *JSONParser) nextLogMessage() bool {
+	p.reset()
+	if !p.s.Next() {
+		p.err = p.s.Error()
+		return false
+	}
+	v := p.s.Value()
+	o, err := v.Object()
+	if err != nil {
+		p.err = err
+		return false
+	}
+	p.appendLogFields(o)
+	return true
+}
+
+func (p *JSONParser) Error() error {
+	return p.err
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/VictoriaMetrics/VictoriaLogs/app/vlinsert/loki"
 	"github.com/VictoriaMetrics/VictoriaLogs/app/vlinsert/nativeinsert"
 	"github.com/VictoriaMetrics/VictoriaLogs/app/vlinsert/opentelemetry"
+	"github.com/VictoriaMetrics/VictoriaLogs/app/vlinsert/splunk"
 	"github.com/VictoriaMetrics/VictoriaLogs/app/vlinsert/syslog"
 )
 
@@ -56,6 +57,16 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) bool {
 		return true
 	}
 
+	switch {
+	case strings.HasPrefix(path, "/services/collector"):
+		if *disableInsert {
+			httpserver.Errorf(w, r, "requests to /services/collector/* are disabled with -insert.disable command-line flag")
+			return true
+		}
+
+		return splunk.RequestHandler(path, w, r)
+	}
+
 	return false
 }
 
@@ -78,7 +89,9 @@ func insertHandler(w http.ResponseWriter, r *http.Request, path string) bool {
 	// See https://github.com/VictoriaMetrics/VictoriaMetrics/issues/8353
 	case strings.HasPrefix(path, "/insert/elasticsearch"):
 		return elasticsearch.RequestHandler(path, w, r)
-
+	case strings.HasPrefix(path, "/insert/splunk"):
+		idx := len("/insert/splunk")
+		return splunk.RequestHandler(path[idx:], w, r)
 	case strings.HasPrefix(path, "/insert/loki/"):
 		return loki.RequestHandler(path, w, r)
 	case strings.HasPrefix(path, "/insert/opentelemetry/"):
@@ -86,7 +99,8 @@ func insertHandler(w http.ResponseWriter, r *http.Request, path string) bool {
 	case strings.HasPrefix(path, "/insert/journald/"):
 		return journald.RequestHandler(path, w, r)
 	case strings.HasPrefix(path, "/insert/datadog/"):
-		return datadog.RequestHandler(path, w, r)
+		idx := len("/insert/datadog")
+		return datadog.RequestHandler(path[idx:], w, r)
 	}
 
 	return false

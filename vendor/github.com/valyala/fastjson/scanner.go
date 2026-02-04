@@ -2,6 +2,7 @@ package fastjson
 
 import (
 	"errors"
+	"fmt"
 )
 
 // Scanner scans a series of JSON values. Values may be delimited by whitespace.
@@ -89,6 +90,32 @@ func (sc *Scanner) Error() error {
 // The value is valid until the Next call.
 func (sc *Scanner) Value() *Value {
 	return sc.v
+}
+
+// Parse parses s containing JSON.
+//
+// The returned value is valid until the next call to Parse*.
+func (sc *Scanner) Parse(s string) (*Value, error) {
+	s = skipWS(s)
+	sc.b = append(sc.b[:0], s...)
+	sc.c.reset()
+
+	v, tail, err := parseValue(b2s(sc.b), &sc.c, 0)
+	if err != nil {
+		return nil, fmt.Errorf("cannot parse JSON: %s; unparsed tail: %q", err, startEndString(tail))
+	}
+	tail = skipWS(tail)
+	if len(tail) > 0 {
+		return nil, fmt.Errorf("unexpected tail: %q", startEndString(tail))
+	}
+	return v, nil
+}
+
+// ParseBytes parses b containing JSON.
+//
+// The returned Value is valid until the next call to Parse*.
+func (sc *Scanner) ParseBytes(b []byte) (*Value, error) {
+	return sc.Parse(b2s(b))
 }
 
 var errEOF = errors.New("end of s")
