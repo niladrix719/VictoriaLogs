@@ -1135,8 +1135,13 @@ func (q *Query) GetStatsLabelsAddGroupingByTime(step, offset int64) ([]string, e
 			// These pipes do not change the set of fields.
 		case *pipeRunningStats:
 			// `| running_stats ...` pipe must contain the same labelFields as the preceding `stats` pipe.
+			//
+			// Allow `| total_stats ...` if it uses smaller `by (...)` list (subset of labels).
 			if !hasNeededFieldsExceptTime(t.byFields, labelFields) {
-				return nil, fmt.Errorf("the %q must contain the same list of fields as `stats` pipe in the query [%s]", t, q)
+				allowTotalStatsBySubset := t.isTotal && hasOnlyKnownFields(t.byFields, labelFields)
+				if !allowTotalStatsBySubset {
+					return nil, fmt.Errorf("the %q must contain the same list of fields as `stats` pipe in the query [%s]", t, q)
+				}
 			}
 			for _, f := range t.funcs {
 				addToMetricFields(f.resultName)
@@ -1265,6 +1270,15 @@ func hasNeededFieldsExceptTime(fields, neededFields []string) bool {
 		}
 	}
 
+	return true
+}
+
+func hasOnlyKnownFields(fields, knownFields []string) bool {
+	for _, f := range fields {
+		if !slices.Contains(knownFields, f) {
+			return false
+		}
+	}
 	return true
 }
 

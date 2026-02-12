@@ -24,6 +24,7 @@ according to the following docs:
 
 * FEATURE: upgrade Go builder from Go1.25.7 to Go1.26.0. See [Go 1.26 release notes](https://go.dev/doc/go1.26).
 * FEATURE: [querying](https://docs.victoriametrics.com/victorialogs/querying/): sort response fields by their name unless the query ends with a pipe, which preserves the order of the returned fields such as [`fields`](https://docs.victoriametrics.com/victorialogs/logsql/#fields-pipe) and [`stats`](https://docs.victoriametrics.com/victorialogs/logsql/#stats-pipe). Previously the order of the returned fields was undefined. See [#1011](https://github.com/VictoriaMetrics/VictoriaLogs/issues/1011).
+* FEATURE: [LogsQL](https://docs.victoriametrics.com/victorialogs/logsql/): allow using `total_stats by (...)` with fields that are a subset of labels produced by the preceding `stats` pipe in [`/select/logsql/stats_query`](https://docs.victoriametrics.com/victorialogs/querying/#querying-log-stats) and [`/select/logsql/stats_query_range`](https://docs.victoriametrics.com/victorialogs/querying/#querying-log-range-stats). See [#1088](https://github.com/VictoriaMetrics/VictoriaLogs/issues/1088).
 
 ## [v1.45.0](https://github.com/VictoriaMetrics/VictoriaLogs/releases/tag/v1.45.0)
 
