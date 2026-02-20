@@ -14,7 +14,7 @@ const OverviewHits: FC = () => {
   const {
     topHits: { value: topHits },
     groupFieldHits: { value: groupFieldHits },
-    barsCount: { value: barsCount },
+    step: { value: step },
   } = useHitsChartConfig();
 
   const { extraParams, addNewFilter } = useExtraFilters();
@@ -31,7 +31,7 @@ const OverviewHits: FC = () => {
       period,
       extraParams,
       query,
-      barsCount,
+      step,
       field: groupFieldHits,
       fieldsLimit: topHits,
     });
