@@ -146,7 +146,7 @@ While it is recommended to keep the default stream fields, you can override them
 
 ### Filtering Kubernetes logs
 
-vlagent allows filtering Kubernetes container logs based on metadata fields. 
+`vlagent` allows filtering Kubernetes container logs based on metadata fields.
 It is applied before reading the log files, which saves CPU and I/O resources by skipping unwanted data.
 
 Supported metadata fields:
@@ -177,12 +177,12 @@ Example usage:
   -kubernetesCollector.excludeFilter='kubernetes.pod_annotations.logging.vlagent.io/exclude:=true or kubernetes.pod_namespace:in(test, logging)'
 ```
 
-This command starts vlagent with a filter that excludes logs from pods labeled with `logging.vlagent.io/exclude: true` 
+This command starts `vlagent` with a filter that excludes logs from pods labeled with `logging.vlagent.io/exclude: true`
 and skips all logs from the `test` and `logging` namespaces.
 
 ### Kubernetes metadata configuration
 
-vlagent automatically enriches collected logs with Kubernetes metadata. 
+`vlagent` automatically enriches collected logs with Kubernetes metadata.
 You can control which metadata fields are attached to every log entry using the following flags:
 
 * `-kubernetesCollector.includePodLabels` (default: `true`) - attach Pod labels to every log entry.
@@ -190,8 +190,8 @@ You can control which metadata fields are attached to every log entry using the 
 * `-kubernetesCollector.includeNodeLabels` (default: `false`) - attach Node labels to every log entry.
 * `-kubernetesCollector.includeNodeAnnotations` (default: `false`) - attach Node annotations to every log entry.
 
-Note that vlagent does not update node or pod labels during runtime. 
-Therefore, if node/pod metadata changes, you must restart vlagent to apply those changes.
+Note that `vlagent` does not update node or pod labels during runtime.
+Therefore, if node/pod metadata changes, you must restart `vlagent` to apply those changes.
 
 ## remote write format
 
@@ -379,7 +379,7 @@ It is safe to share the collected profiles from a security point of view, since 
 
 ## Building from source code
 
-Follow these steps to build vlagent from source code:
+Follow these steps to build `vlagent` from source code:
 
 - Check out the VictoriaLogs source code:
 
@@ -394,7 +394,7 @@ Follow these steps to build vlagent from source code:
   git checkout <commit-hash-here>
   ```
 
-- Build vlagent (requires Go to be installed on your computer. See [how to install Go](https://golang.org/doc/install)):
+- Build `vlagent` (requires Go to be installed on your computer. See [how to install Go](https://golang.org/doc/install)):
 
   ```sh
   make vlagent
@@ -406,7 +406,7 @@ Follow these steps to build vlagent from source code:
   bin/vlagent -remoteWrite.url=...
   ```
 
-An alternative approach is to build vlagent inside a Docker builder container. This approach doesn't require Go to be installed,
+An alternative approach is to build `vlagent` inside a Docker builder container. This approach doesn't require Go to be installed,
 but it does require Docker on your computer. See [how to install Docker](https://docs.docker.com/engine/install/):
 
 ```sh

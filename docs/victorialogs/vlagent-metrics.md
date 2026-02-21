@@ -17,7 +17,7 @@ aliases:
 - /victorialogs/vlagent-metrics/
 ---
 
-This document provides a comprehensive reference for all metrics exposed by vlagent at the `http://localhost:9429/metrics` endpoint.
+This document provides a comprehensive reference for all metrics exposed by `vlagent` at the `http://localhost:9429/metrics` endpoint.
 These metrics follow the Prometheus exposition format and can be used for monitoring, alerting, and performance analysis of log collection and remote write operations.
 
 ## Remote Write Metrics
