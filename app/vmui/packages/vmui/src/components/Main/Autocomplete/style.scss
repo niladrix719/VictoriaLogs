@@ -1,5 +1,29 @@
 @use "src/styles/variables" as *;
 
+.vm-autocomplete-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+
+  &_mobile {
+    flex-direction: column;
+
+    .vm-autocomplete-info {
+      border-left: none;
+      border-top: $border-divider;
+      min-width: unset;
+      max-width: unset;
+      width: 100%;
+    }
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+  }
+}
+
 .vm-autocomplete {
   position: relative;
   max-height: 300px;
@@ -32,15 +56,11 @@
     }
   }
 
-  &-info,
   &-message {
+    position: relative;
     padding: $padding-global;
     background-color: $color-background-block;
     border-top: $border-divider;
-  }
-
-  &-message {
-    position: relative;
     color: $color-warning;
     font-size: $font-size-small;
 
@@ -57,6 +77,9 @@
   }
 
   &-info {
+    padding: $padding-global;
+    background-color: $color-background-block;
+    border-left: $border-divider;
     min-width: 450px;
     max-width: 500px;
     overflow-wrap: anywhere;

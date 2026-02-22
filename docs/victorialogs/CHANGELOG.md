@@ -34,6 +34,7 @@ according to the following docs:
 * BUGFIX: [web UI](https://docs.victoriametrics.com/victorialogs/querying/#web-ui): fix markdown parsing for log lines starting with tabs in group view.
 * BUGFIX: [web UI](https://docs.victoriametrics.com/victorialogs/querying/#web-ui): fix timestamp rendering according to the selected timezone. See [#63](https://github.com/VictoriaMetrics/VictoriaLogs/issues/63).
 * BUGFIX: [web UI](https://docs.victoriametrics.com/victorialogs/querying/#web-ui): fix copy action to copy only selected columns instead of the full log entry.
+* BUGFIX: [web UI](https://docs.victoriametrics.com/victorialogs/querying/#web-ui): fix auto-suggest popup description panel changing when moving the mouse from a hovered item to the description. The description panel is now displayed to the right of the options list, so navigating to it no longer triggers hover events on other list items. See [#1117](https://github.com/VictoriaMetrics/VictoriaLogs/issues/1117).
 
 ## [v1.45.0](https://github.com/VictoriaMetrics/VictoriaLogs/releases/tag/v1.45.0)
 

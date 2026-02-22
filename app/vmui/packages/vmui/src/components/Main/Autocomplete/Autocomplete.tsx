@@ -181,52 +181,59 @@ const Autocomplete: FC<AutocompleteProps> = ({
       disabledFullScreen={disabledFullScreen}
       offset={offset}
     >
-      <div
-        className={classNames({
-          "vm-autocomplete": true,
-          "vm-autocomplete_mobile": isMobile && !disabledFullScreen,
-        })}
-        ref={wrapperEl}
-      >
-        {loading && <div className="vm-autocomplete__loader"><RefreshIcon/><span>Loading...</span></div>}
-        {displayNoOptionsText && <div className="vm-autocomplete__no-options">{noOptionsText}</div>}
-        {!hideFoundedOptions && foundOptions.map((option, i) =>
+      <div className={classNames({
+        "vm-autocomplete-container": true,
+        "vm-autocomplete-container_mobile": isMobile && !disabledFullScreen,
+      })}>
+        <div className="vm-autocomplete-container__list">
           <div
             className={classNames({
-              "vm-list-item": true,
-              "vm-list-item_mobile": isMobile,
-              "vm-list-item_active": i === focusOption.index,
-              "vm-list-item_multiselect": selected,
-              "vm-list-item_multiselect_selected": selected?.includes(option.value),
-              "vm-list-item_with-icon":  option.icon,
+              "vm-autocomplete": true,
+              "vm-autocomplete_mobile": isMobile && !disabledFullScreen,
             })}
-            id={`$autocomplete$${option.value}`}
-            key={`${i}${option.value}`}
-            onClick={createHandlerSelect(option)}
-            onMouseEnter={createHandlerMouseEnter(i)}
+            ref={wrapperEl}
           >
-            {selected?.includes(option.value) && <DoneIcon/>}
-            <>{option.icon}</>
-            <span>{option.value}</span>
+            {loading && <div className="vm-autocomplete__loader"><RefreshIcon/><span>Loading...</span></div>}
+            {displayNoOptionsText && <div className="vm-autocomplete__no-options">{noOptionsText}</div>}
+            {!hideFoundedOptions && foundOptions.map((option, i) =>
+              <div
+                className={classNames({
+                  "vm-list-item": true,
+                  "vm-list-item_mobile": isMobile,
+                  "vm-list-item_active": i === focusOption.index,
+                  "vm-list-item_multiselect": selected,
+                  "vm-list-item_multiselect_selected": selected?.includes(option.value),
+                  "vm-list-item_with-icon":  option.icon,
+                })}
+                id={`$autocomplete$${option.value}`}
+                key={`${i}${option.value}`}
+                onClick={createHandlerSelect(option)}
+                onMouseEnter={createHandlerMouseEnter(i)}
+              >
+                {selected?.includes(option.value) && <DoneIcon/>}
+                <>{option.icon}</>
+                <span>{option.value}</span>
+              </div>
+            )}
+          </div>
+          {showMessage && (
+            <div className="vm-autocomplete-message">
+              Shown {maxDisplayResults?.limit} results out of {totalFound}. {showMessage}
+            </div>
+          )}
+        </div>
+        {foundOptions[focusOption.index]?.description && (
+          <div className="vm-autocomplete-info">
+            <div className="vm-autocomplete-info__type">
+              {foundOptions[focusOption.index].type}
+            </div>
+            <div
+              className="vm-autocomplete-info__description"
+              dangerouslySetInnerHTML={{ __html: foundOptions[focusOption.index].description || "" }}
+            />
           </div>
         )}
       </div>
-      {showMessage && (
-        <div className="vm-autocomplete-message">
-          Shown {maxDisplayResults?.limit} results out of {totalFound}. {showMessage}
-        </div>
-      )}
-      {foundOptions[focusOption.index]?.description && (
-        <div className="vm-autocomplete-info">
-          <div className="vm-autocomplete-info__type">
-            {foundOptions[focusOption.index].type}
-          </div>
-          <div
-            className="vm-autocomplete-info__description"
-            dangerouslySetInnerHTML={{ __html: foundOptions[focusOption.index].description || "" }}
-          />
-        </div>
-      )}
     </Popper>
   );
 };
