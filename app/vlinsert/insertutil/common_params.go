@@ -67,6 +67,11 @@ func GetCommonParams(r *http.Request) (*CommonParams, error) {
 	decolorizeFields := getArray(r, "decolorize_fields", "VL-Decolorize-Fields")
 	preserveJSONKeys := getArray(r, "preserve_json_keys", "VL-Preserve-JSON-Keys")
 
+	// verify that the _stream_fields contains valid values
+	if err := logstorage.CheckStreamFieldNames(streamFields); err != nil {
+		return nil, fmt.Errorf("cannot parse stream field names from the _stream_fields query arg or from VL-Stream-Fields header: %w", err)
+	}
+
 	extraFields, err := getExtraFields(r)
 	if err != nil {
 		return nil, err

@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { TimeParams } from "../../types";
 import { useFetchLogs } from "../../pages/QueryPage/hooks/useFetchLogs";
 import showSaveFilePicker from "../../utils/nativeFileSystemAdapter/showSaveFilePicker";
+import { useExtraFilters } from "../ExtraFilters/hooks/useExtraFilters";
 
 type DownloadLog = {
   filename: string;
@@ -12,6 +13,7 @@ type DownloadLog = {
 
 const useDownloadLogs = () => {
   const { isLoading: isFetchingLogs, error: fetchLogsError, fetchLogs } = useFetchLogs();
+  const { extraParams } = useExtraFilters();
 
   const [saveFileError, setSaveFileError] = useState<string | null>(null);
   const [isSavingFile, setSavingFile] = useState(false);
@@ -37,10 +39,14 @@ const useDownloadLogs = () => {
         date: formatDateToUTC(dayjs(end).toDate()),
       };
 
-      const res = await fetchLogs({ query, period, isDownload: true });
-
-      if (!res || Array.isArray(res) || !res.body) {
-        setSaveFileError("Download failed: missing response body.");
+      const res = await fetchLogs({ query, period, isDownload: true, extraParams });
+      if (!res || Array.isArray(res) || !res.body || !res.ok) {
+        if (res instanceof Response) {
+          const errorText = await res.text();
+          setSaveFileError(errorText.trim() || `Download failed: ${res.status} ${res.statusText}`);
+        } else {
+          setSaveFileError("unable to fetch logs");
+        }
         return false;
       }
 
@@ -59,7 +65,7 @@ const useDownloadLogs = () => {
     } finally {
       setSavingFile(false);
     }
-  }, [fetchLogs]);
+  }, [fetchLogs, extraParams]);
 
   return {
     error,

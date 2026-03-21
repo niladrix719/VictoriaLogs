@@ -72,9 +72,10 @@ func (nqr *NetQueryRunner) Run(ctx context.Context, concurrency int, netSearch f
 func splitQueryToRemoteAndLocal(q *Query) (*Query, []pipe) {
 	timestamp := q.GetTimestamp()
 	qRemote := q.Clone(timestamp)
-	qRemote.DropAllPipes()
+	qRemote.enablePrintOptions()
 
-	pipesRemote, pipesLocal := getRemoteAndLocalPipes(q)
+	pipesRemote, pipesLocal := getRemoteAndLocalPipes(qRemote)
+	qRemote.DropAllPipes()
 	qRemote.pipes = pipesRemote
 
 	if !qRemote.IsFixedOutputFieldsOrder() {

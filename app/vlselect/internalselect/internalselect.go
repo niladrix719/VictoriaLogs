@@ -188,10 +188,12 @@ func processFieldNamesRequest(ctx context.Context, w http.ResponseWriter, r *htt
 		return err
 	}
 
+	filter := r.FormValue("filter")
+
 	qctx := cp.NewQueryContext(ctx)
 	defer cp.UpdatePerQueryStatsMetrics()
 
-	fieldNames, err := vlstorage.GetFieldNames(qctx)
+	fieldNames, err := vlstorage.GetFieldNames(qctx, filter)
 	if err != nil {
 		return fmt.Errorf("cannot obtain field names: %w", err)
 	}
@@ -206,6 +208,7 @@ func processFieldValuesRequest(ctx context.Context, w http.ResponseWriter, r *ht
 	}
 
 	fieldName := r.FormValue("field")
+	filter := r.FormValue("filter")
 
 	limit, err := getInt64FromRequest(r, "limit")
 	if err != nil {
@@ -215,7 +218,7 @@ func processFieldValuesRequest(ctx context.Context, w http.ResponseWriter, r *ht
 	qctx := cp.NewQueryContext(ctx)
 	defer cp.UpdatePerQueryStatsMetrics()
 
-	fieldValues, err := vlstorage.GetFieldValues(qctx, fieldName, uint64(limit))
+	fieldValues, err := vlstorage.GetFieldValues(qctx, fieldName, filter, uint64(limit))
 	if err != nil {
 		return fmt.Errorf("cannot obtain field values: %w", err)
 	}
@@ -229,10 +232,12 @@ func processStreamFieldNamesRequest(ctx context.Context, w http.ResponseWriter, 
 		return err
 	}
 
+	filter := r.FormValue("filter")
+
 	qctx := cp.NewQueryContext(ctx)
 	defer cp.UpdatePerQueryStatsMetrics()
 
-	fieldNames, err := vlstorage.GetStreamFieldNames(qctx)
+	fieldNames, err := vlstorage.GetStreamFieldNames(qctx, filter)
 	if err != nil {
 		return fmt.Errorf("cannot obtain stream field names: %w", err)
 	}
@@ -247,6 +252,7 @@ func processStreamFieldValuesRequest(ctx context.Context, w http.ResponseWriter,
 	}
 
 	fieldName := r.FormValue("field")
+	filter := r.FormValue("filter")
 
 	limit, err := getInt64FromRequest(r, "limit")
 	if err != nil {
@@ -256,7 +262,7 @@ func processStreamFieldValuesRequest(ctx context.Context, w http.ResponseWriter,
 	qctx := cp.NewQueryContext(ctx)
 	defer cp.UpdatePerQueryStatsMetrics()
 
-	fieldValues, err := vlstorage.GetStreamFieldValues(qctx, fieldName, uint64(limit))
+	fieldValues, err := vlstorage.GetStreamFieldValues(qctx, fieldName, filter, uint64(limit))
 	if err != nil {
 		return fmt.Errorf("cannot obtain stream field values: %w", err)
 	}
@@ -481,7 +487,7 @@ func checkProtocolVersion(r *http.Request, expectedProtocolVersion string) error
 	version := r.FormValue("version")
 	if version != expectedProtocolVersion {
 		return fmt.Errorf("unexpected protocol version=%q; want %q; the most likely cause of this error is different versions of VictoriaLogs cluster components; "+
-			"make sure VictoriaLogs compoments have the same release version", version, expectedProtocolVersion)
+			"make sure VictoriaLogs components have the same release version", version, expectedProtocolVersion)
 	}
 	return nil
 }

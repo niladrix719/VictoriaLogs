@@ -1,5 +1,4 @@
 import { FC, useEffect, useMemo, useRef, useState } from "preact/compat";
-import useElementSize from "../../../../hooks/useElementSize";
 import uPlot, { AlignedData } from "uplot";
 import { GraphOptions } from "../types";
 import usePlotScale from "../../../../hooks/uplot/usePlotScale";
@@ -16,9 +15,9 @@ import BarHitsLegend from "../BarHitsLegend/BarHitsLegend";
 import { sortLogHits } from "../../../../utils/logs";
 import { useAppState } from "../../../../state/common/StateContext";
 import { useTimeState } from "../../../../state/time/TimeStateContext";
-import { ExtraFilter } from "../../../../pages/OverviewPage/FiltersBar/types";
 import useDeviceDetect from "../../../../hooks/useDeviceDetect";
 import { cumulativeMatrix } from "../../../../utils/uplot/cumulative";
+import { Size, useResizeObserver } from "../../../../hooks/useResizeObserver";
 
 interface Props {
   logHits: LogHits[];
@@ -26,17 +25,18 @@ interface Props {
   data: AlignedData;
   period: TimeParams;
   setPeriod: ({ from, to }: { from: Date, to: Date }) => void;
-  onApplyFilter: (value: ExtraFilter) => void;
   graphOptions: GraphOptions;
 }
 
-const BarHitsPlot: FC<Props> = ({ graphOptions, logHits, totalHits, data: _data, period, setPeriod, onApplyFilter }: Props) => {
+const BarHitsPlot: FC<Props> = ({ graphOptions, logHits, totalHits, data: _data, period, setPeriod }: Props) => {
   const { isMobile } = useDeviceDetect();
   const { isDarkTheme } = useAppState();
   const { timezone } = useTimeState();
-  const [containerRef, containerSize] = useElementSize();
+  const containerRef = useRef<HTMLDivElement>(null);
   const uPlotRef = useRef<HTMLDivElement>(null);
   const [uPlotInst, setUPlotInst] = useState<uPlot>();
+
+  const [containerSize, setContainerSize] = useState<Size>({ width: 0, height: 0 });
 
   const { xRange, setPlotScale } = usePlotScale({ period, setPeriod });
   const { onReadyChart, isPanning } = useReadyChart(setPlotScale);
@@ -126,7 +126,10 @@ const BarHitsPlot: FC<Props> = ({ graphOptions, logHits, totalHits, data: _data,
 
   useEffect(() => {
     if (!uPlotInst) return;
-    uPlotInst.setSize(containerSize);
+    uPlotInst.setSize({
+      width: containerSize.width || window.innerWidth / 2,
+      height: containerSize.height || window.innerHeight / 4,
+    });
     uPlotInst.redraw();
   }, [containerSize]);
 
@@ -135,6 +138,8 @@ const BarHitsPlot: FC<Props> = ({ graphOptions, logHits, totalHits, data: _data,
     uPlotInst.setData(data);
     uPlotInst.redraw();
   }, [data]);
+
+  useResizeObserver({ ref: containerRef, onResize: setContainerSize });
 
   return (
     <>
@@ -160,7 +165,6 @@ const BarHitsPlot: FC<Props> = ({ graphOptions, logHits, totalHits, data: _data,
       {uPlotInst && !isSingleOtherSeries && (
         <BarHitsLegend
           uPlotInst={uPlotInst}
-          onApplyFilter={onApplyFilter}
           legendDetails={legendDetails}
         />
       )}

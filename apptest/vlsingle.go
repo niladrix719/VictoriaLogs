@@ -3,11 +3,9 @@ package apptest
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"regexp"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/VictoriaMetrics/VictoriaLogs/lib/logstorage"
 )
@@ -27,7 +25,7 @@ type Vlsingle struct {
 func MustStartVlsingle(t *testing.T, instance string, flags []string, cli *Client) *Vlsingle {
 	t.Helper()
 
-	storageDataPath := fmt.Sprintf("%s/%s-%d", os.TempDir(), instance, time.Now().UnixNano())
+	storageDataPath := fmt.Sprintf("%s/%s", t.Name(), instance)
 	flags = setDefaultFlags(flags, map[string]string{
 		"-storageDataPath": storageDataPath,
 		"-retentionPeriod": "100y",
@@ -133,20 +131,95 @@ func (app *Vlsingle) NativeWrite(t *testing.T, records []logstorage.InsertRow, o
 	app.node.cli.Post(t, dstURL, "application/octet-stream", data)
 }
 
-// LogsQLQuery is a test helper function that performs
-// PromQL/MetricsQL range query by sending a HTTP POST request to
-// /select/logsql/query endpoint.
+// LogsQLQuery sends HTTP POST request to /select/logsql/query endpoint.
 //
 // See https://docs.victoriametrics.com/victorialogs/querying/#querying-logs
 func (app *Vlsingle) LogsQLQuery(t *testing.T, query string, opts QueryOpts) *LogsQLQueryResponse {
+	t.Helper()
+
+	res, statusCode := app.LogsQLQueryRaw(t, query, opts)
+	if statusCode != 200 {
+		t.Fatalf("unexpected response status code: %d; want 200; response\n%s", statusCode, res)
+	}
+	return NewLogsQLQueryResponse(t, res)
+}
+
+// LogsQLQueryRaw sends HTTP POST request to /select/logsql/query endpoint and returns the plain response with status code.
+//
+// See https://docs.victoriametrics.com/victorialogs/querying/#querying-logs
+func (app *Vlsingle) LogsQLQueryRaw(t *testing.T, query string, opts QueryOpts) (string, int) {
 	t.Helper()
 
 	values := opts.asURLValues()
 	values.Add("query", query)
 
 	url := fmt.Sprintf("http://%s/select/logsql/query", app.node.httpListenAddr)
-	res, _ := app.node.cli.PostForm(t, url, values)
-	return NewLogsQLQueryResponse(t, res)
+	return app.node.cli.PostForm(t, url, values)
+}
+
+// FieldNames sends HTTP POST request to /select/logsql/field_names endpoint and returns the plain response.
+//
+// See https://docs.victoriametrics.com/victorialogs/querying/#querying-field-names
+func (app *Vlsingle) FieldNames(t *testing.T, query string, opts FieldNamesOpts) string {
+	t.Helper()
+
+	values := opts.asURLValues()
+	values.Add("query", query)
+
+	url := fmt.Sprintf("http://%s/select/logsql/field_names", app.node.httpListenAddr)
+	return app.node.cli.PostFormSuccess(t, url, values)
+}
+
+// FieldValues sends HTTP POST request to /select/logsql/field_values endpoint and returns the plain response.
+//
+// See https://docs.victoriametrics.com/victorialogs/querying/#querying-field-values
+func (app *Vlsingle) FieldValues(t *testing.T, query string, opts FieldValuesOpts) string {
+	t.Helper()
+
+	values := opts.asURLValues()
+	values.Add("query", query)
+
+	url := fmt.Sprintf("http://%s/select/logsql/field_values", app.node.httpListenAddr)
+	return app.node.cli.PostFormSuccess(t, url, values)
+}
+
+// StreamFieldNames sends HTTP POST request to /select/logsql/stream_field_names endpoint and returns the plain response.
+//
+// See https://docs.victoriametrics.com/victorialogs/querying/#querying-stream-field-names
+func (app *Vlsingle) StreamFieldNames(t *testing.T, query string, opts StreamFieldNamesOpts) string {
+	t.Helper()
+
+	values := opts.asURLValues()
+	values.Add("query", query)
+
+	url := fmt.Sprintf("http://%s/select/logsql/stream_field_names", app.node.httpListenAddr)
+	return app.node.cli.PostFormSuccess(t, url, values)
+}
+
+// StreamFieldValues sends HTTP POST request to /select/logsql/stream_field_values endpoint and returns the plain response.
+//
+// See https://docs.victoriametrics.com/victorialogs/querying/#querying-stream-field-values
+func (app *Vlsingle) StreamFieldValues(t *testing.T, query string, opts StreamFieldValuesOpts) string {
+	t.Helper()
+
+	values := opts.asURLValues()
+	values.Add("query", query)
+
+	url := fmt.Sprintf("http://%s/select/logsql/stream_field_values", app.node.httpListenAddr)
+	return app.node.cli.PostFormSuccess(t, url, values)
+}
+
+// Streams sends HTTP POST request to /select/logsql/streams endpoint and returns the plain response.
+//
+// See https://docs.victoriametrics.com/victorialogs/querying/#querying-streams
+func (app *Vlsingle) Streams(t *testing.T, query string, opts StreamsOpts) string {
+	t.Helper()
+
+	values := opts.asURLValues()
+	values.Add("query", query)
+
+	url := fmt.Sprintf("http://%s/select/logsql/streams", app.node.httpListenAddr)
+	return app.node.cli.PostFormSuccess(t, url, values)
 }
 
 // StatsQueryRaw is a test helper function that performs

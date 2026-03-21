@@ -160,6 +160,16 @@ See also:
 - [Querying field names](https://docs.victoriametrics.com/victorialogs/querying/#querying-field-names)
 - [Querying field values](https://docs.victoriametrics.com/victorialogs/querying/#querying-field-values)
 
+#### Querying logs in CSV format
+
+The [`/select/logsql/query`](https://docs.victoriametrics.com/victorialogs/querying/#querying-logs) endpoint returns query results in CSV format
+if `format=csv` query arg is passed to this endpoint.
+
+Performance tip: it is recommended specifying the list of log fields to return via [`fields` pipe](https://docs.victoriametrics.com/victorialogs/logsql/#fields-pipe)
+or via [`stats` pipe](https://docs.victoriametrics.com/victorialogs/logsql/#stats-pipe). If the query doesn't end with these pipes, then VictoriaLogs
+automatically detects the list of fields to return in CSV format across all the selected logs. This may take additional time, since it requires additional scanning
+for the selected logs.
+
 ### Live tailing
 
 VictoriaLogs provides `/select/logsql/tail?query=<query>` HTTP endpoint, which returns live tailing results for the given [`<query>`](https://docs.victoriametrics.com/victorialogs/logsql/),
@@ -333,6 +343,8 @@ Optional `fields_limit=N` query arg can be passed to `/select/logsql/hits` for l
 If more than `N` unique `"fields"` groups is found, then top `N` `"fields"` groups with the maximum number of `"total"` hits are returned.
 The remaining hits are returned in `"fields": {}` group.
 
+Pass `ignore_pipes=1` query arg to `/select/logsql/hits` in order to ignore pipes from the `query` while obtaining hits to return.
+
 By default the `(AccountID=0, ProjectID=0)` [tenant](https://docs.victoriametrics.com/victorialogs/#multitenancy) is queried.
 If you need querying other tenant, then specify it via `AccountID` and `ProjectID` http request headers. For example, the following query returns hits stats
 for `(AccountID=12, ProjectID=34)` tenant:
@@ -409,6 +421,8 @@ Below is an example response:
 ```
 
 The `hits` value shows the number of logs with the given `field_name=field_value` pair.
+
+Pass `ignore_pipes=1` query arg to `/select/logsql/facets` in order to ignore pipes from the `query` while obtaining facets to return.
 
 The number of values per each log field can be controlled via `limit` query arg. For example, the following command returns up to 3 most frequent values
 per each log field seen in the logs over the last hour:
@@ -695,6 +709,8 @@ The `/select/logsql/stream_ids` endpoint supports optional `limit=N` query arg, 
 The endpoint returns arbitrary subset of `_stream_id` values if their number exceeds `N`, so `limit=N` cannot be used for pagination over big number of `_stream_id` values.
 When the `limit` is reached, `hits` are zeroed, since they cannot be calculated reliably.
 
+Pass `ignore_pipes=1` query arg to `/select/logsql/stream_ids` in order to ignore pipes from the `query` while obtaining log stream ids to return.
+
 By default the `(AccountID=0, ProjectID=0)` [tenant](https://docs.victoriametrics.com/victorialogs/#multitenancy) is queried.
 If you need querying other tenant, then specify it via `AccountID` and `ProjectID` http request headers. For example, the following query returns `_stream_id` stats
 for `(AccountID=12, ProjectID=34)` tenant:
@@ -758,6 +774,8 @@ The `/select/logsql/streams` endpoint supports optional `limit=N` query arg, whi
 The endpoint returns arbitrary subset of streams if their number exceeds `N`, so `limit=N` cannot be used for pagination over big number of streams.
 When the `limit` is reached, `hits` are zeroed, since they cannot be calculated reliably.
 
+Pass `ignore_pipes=1` query arg to `/select/logsql/streams` in order to ignore pipes from the `query` while obtaining log streams to return.
+
 By default the `(AccountID=0, ProjectID=0)` [tenant](https://docs.victoriametrics.com/victorialogs/#multitenancy) is queried.
 If you need querying other tenant, then specify it via `AccountID` and `ProjectID` http request headers. For example, the following query returns stream stats
 for `(AccountID=12, ProjectID=34)` tenant:
@@ -818,6 +836,10 @@ Below is an example JSON output returned from this endpoint:
 }
 ```
 
+Pass `filter=substring` query arg to `/select/logsql/stream_field_names` in order to return only the field names containing the given `substring`.
+
+Pass `ignore_pipes=1` query arg to `/select/logsql/stream_field_names` in order to ignore pipes from the `query` while obtaining the field names to return.
+
 By default the `(AccountID=0, ProjectID=0)` [tenant](https://docs.victoriametrics.com/victorialogs/#multitenancy) is queried.
 If you need querying other tenant, then specify it via `AccountID` and `ProjectID` http request headers. For example, the following query returns stream field names stats
 for `(AccountID=12, ProjectID=34)` tenant:
@@ -876,6 +898,10 @@ Below is an example JSON output returned from this endpoint:
 
 The `/select/logsql/stream_field_values` endpoint supports optional `limit=N` query arg, which allows limiting the number of returned values to `N` with the biggest number of hits.
 If the `limit` is exceeded, then a random set of values is returned with zeroed `hits`.
+
+Pass `filter=substring` query arg to `/select/logsql/stream_field_values` in order to return only the field values containing the given `substring`.
+
+Pass `ignore_pipes=1` query arg to `/select/logsql/stream_field_values` in order to ignore pipes from the `query` while obtaining the values to return for the given `field`.
 
 By default the `(AccountID=0, ProjectID=0)` [tenant](https://docs.victoriametrics.com/victorialogs/#multitenancy) is queried.
 If you need querying other tenant, then specify it via `AccountID` and `ProjectID` http request headers. For example, the following query returns stream field values stats
@@ -956,6 +982,10 @@ Below is an example JSON output returned from this endpoint:
 }
 ```
 
+Pass `filter=substring` query arg to `/select/logsql/field_names` in order to return only the field names containing the given `substring`.
+
+Pass `ignore_pipes=1` query arg to `/select/logsql/field_names` in order to ignore pipes from the `query` while obtaining the field names to return.
+
 By default the `(AccountID=0, ProjectID=0)` [tenant](https://docs.victoriametrics.com/victorialogs/#multitenancy) is queried.
 If you need querying other tenant, then specify it via `AccountID` and `ProjectID` http request headers. For example, the following query returns field names stats
 for `(AccountID=12, ProjectID=34)` tenant:
@@ -1016,9 +1046,13 @@ Below is an example JSON output returned from this endpoint:
 }
 ```
 
+Pass `filter=substring` query arg to `/select/logsql/field_values` in order to return only the values containing the given `substring`.
+
 The `/select/logsql/field_values` endpoint supports optional `limit=N` query arg, which allows limiting the number of returned values to `N`.
 The endpoint returns arbitrary subset of values if their number exceeds `N`, so `limit=N` cannot be used for pagination over big number of field values.
 When the `limit` is reached, `hits` are zeroed, since they cannot be calculated reliably.
+
+Pass `ignore_pipes=1` query arg to `/select/logsql/field_values` in order to ignore pipes from the `query` while obtaining the values to return for the given `field`.
 
 By default the `(AccountID=0, ProjectID=0)` [tenant](https://docs.victoriametrics.com/victorialogs/#multitenancy) is queried.
 If you need querying other tenant, then specify it via `AccountID` and `ProjectID` http request headers. For example, the following query returns field values stats
@@ -1080,7 +1114,7 @@ which can be used for hiding the specific [log fields](https://docs.victoriametr
 These fields become invisible during query execution - they aren't visible during [filtering](https://docs.victoriametrics.com/victorialogs/logsql/#filters)
 and they aren't visible during execution of all the [LogsQL pipes](https://docs.victoriametrics.com/victorialogs/logsql/#pipes).
 
-This functionality is useful for restricting acces to certain log fields with sensitive information for the particular authorized users.
+This functionality is useful for restricting access to certain log fields with sensitive information for the particular authorized users.
 The `hidden_fields_filters` query arg can be attached to the request by auth proxy such as [vmauth](https://docs.victoriametrics.com/victoriametrics/vmauth/)
 according to [these docs](https://docs.victoriametrics.com/victoriametrics/vmauth/#enforcing-query-args).
 
@@ -1270,7 +1304,7 @@ The following example calculates stats on the number of log messages received du
 grouped by `log.level` [field](https://docs.victoriametrics.com/victorialogs/keyconcepts/#data-model) with traditional Unix tools:
 
 ```sh
-curl http://localhost:9428/select/logsql/query -d 'query=_time:5m log.level:*' | jq -r '."log.level"' | sort | uniq -c 
+curl http://localhost:9428/select/logsql/query -d 'query=_time:5m log.level:*' | jq -r '."log.level"' | sort | uniq -c
 ```
 
 The query selects all the log messages with non-empty `log.level` field via ["any value" filter](https://docs.victoriametrics.com/victorialogs/logsql/#any-value-filter),

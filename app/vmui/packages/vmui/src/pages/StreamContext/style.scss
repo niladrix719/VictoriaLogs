@@ -1,5 +1,5 @@
 @use "src/styles/variables" as *;
-@use 'sass:color';
+@use "sass:color";
 
 .vm-stream-context-page {
   position: relative;
@@ -42,6 +42,10 @@
         }
       }
     }
+  }
+
+  &__error {
+    padding-top: $padding-global;
   }
 
   &__load-more {
@@ -96,6 +100,6 @@
   }
 
   &_modal &-header {
-    top: 51px
+    top: 41px
   }
 }

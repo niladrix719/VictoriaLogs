@@ -127,7 +127,8 @@ export const useFetchLogHits = (defaultQuery = "*") => {
       if (!response.ok || !response.body) {
         const text = await response.text();
         try {
-          setError(JSON.stringify(JSON.parse(text), null, 2));
+          const json = JSON.parse(text);
+          setError(typeof json?.error === "string" ? json.error : text);
         } catch (_e) {
           setError(text);
         }

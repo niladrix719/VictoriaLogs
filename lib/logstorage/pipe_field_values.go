@@ -12,11 +12,17 @@ import (
 type pipeFieldValues struct {
 	field string
 
+	// if the filter is non-empty then only the field values containing the given filter substring are returned.
+	filter string
+
 	limit uint64
 }
 
 func (pf *pipeFieldValues) String() string {
 	s := "field_values " + quoteTokenIfNeeded(pf.field)
+	if pf.filter != "" {
+		s += " filter " + quoteTokenIfNeeded(pf.filter)
+	}
 	if pf.limit > 0 {
 		s += fmt.Sprintf(" limit %d", pf.limit)
 	}
@@ -64,6 +70,7 @@ func (pf *pipeFieldValues) newPipeProcessor(concurrency int, stopCh <-chan struc
 	pu := &pipeUniq{
 		byFields:      []string{pf.field},
 		hitsFieldName: hitsFieldName,
+		filter:        pf.filter,
 		limit:         pf.limit,
 	}
 	return pu.newPipeProcessor(concurrency, stopCh, cancel, ppNext)
@@ -87,6 +94,16 @@ func parsePipeFieldValues(lex *lexer) (pipe, error) {
 		return nil, fmt.Errorf("cannot parse field name for 'field_values': %w", err)
 	}
 
+	filter := ""
+	if lex.isKeyword("filter") {
+		lex.nextToken()
+		f, err := lex.nextCompoundToken()
+		if err != nil {
+			return nil, fmt.Errorf("cannot parse filter for 'field_values': %w", err)
+		}
+		filter = f
+	}
+
 	limit := uint64(0)
 	if lex.isKeyword("limit") {
 		n, err := parseLimit(lex)
@@ -97,8 +114,9 @@ func parsePipeFieldValues(lex *lexer) (pipe, error) {
 	}
 
 	pf := &pipeFieldValues{
-		field: field,
-		limit: limit,
+		field:  field,
+		filter: filter,
+		limit:  limit,
 	}
 
 	return pf, nil

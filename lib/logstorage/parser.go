@@ -402,6 +402,9 @@ func (opts *queryOptions) String() string {
 	if opts.concurrency > 0 {
 		a = append(a, fmt.Sprintf("concurrency=%d", opts.concurrency))
 	}
+	if opts.parallelReaders > 0 {
+		a = append(a, fmt.Sprintf("parallel_readers=%d", opts.parallelReaders))
+	}
 	if opts.ignoreGlobalTimeFilter != nil {
 		a = append(a, fmt.Sprintf("ignore_global_time_filter=%v", *opts.ignoreGlobalTimeFilter))
 	}
@@ -758,12 +761,62 @@ func (q *Query) IsFixedOutputFieldsOrder() bool {
 		if p.isFixedOutputFieldsOrder() {
 			return true
 		}
-		if pu, ok := p.(*pipeUnion); ok && !pu.q.IsFixedOutputFieldsOrder() {
-			return false
+
+		switch t := p.(type) {
+		case *pipeUnion:
+			if !t.q.IsFixedOutputFieldsOrder() {
+				return false
+			}
+		case *pipeJoin:
+			if !t.q.IsFixedOutputFieldsOrder() {
+				return false
+			}
 		}
 	}
 
 	return false
+}
+
+// GetFixedFields returns a set of fixed fields returned by the given query q.
+//
+// False is returned if it is impossible to detect the set of fields to return for the given q.
+func (q *Query) GetFixedFields() ([]string, bool) {
+	fields, pipeIdx := getFixedFields(q.pipes)
+	if pipeIdx < 0 {
+		return nil, false
+	}
+
+	// fix the order of fields if sort pipe is present
+	pipes := q.pipes[pipeIdx+1:]
+	for _, p := range pipes {
+		if ps, ok := p.(*pipeSort); ok {
+			fields = ps.adjustResultFieldsOrder(fields)
+		}
+	}
+
+	return fields, true
+}
+
+func getFixedFields(pipes []pipe) ([]string, int) {
+	for i := len(pipes) - 1; i >= 0; i-- {
+		p := pipes[i]
+		switch t := p.(type) {
+		case *pipeSort, *pipeLimit, *pipeOffset:
+			// these pipes do not change the fixed fields, so they are allowed after `fields` and `stats`
+		case *pipeFields:
+			fields, ok := t.resultFields()
+			if !ok {
+				return nil, -1
+			}
+			return fields, i
+		case *pipeStats:
+			fields := t.resultFields()
+			return fields, i
+		default:
+			return nil, -1
+		}
+	}
+	return nil, -1
 }
 
 func getFilterTimeRange(f filter) (int64, int64) {
@@ -879,6 +932,18 @@ func (q *Query) AddPipeSortByTimeDesc() {
 	q.mustAppendPipe(s)
 }
 
+// AddPipeFields adds `| fields ...` pipe for the given fields to q.
+//
+// See https://docs.victoriametrics.com/victorialogs/logsql/#fields-pipe
+func (q *Query) AddPipeFields(fields []string) {
+	a := make([]string, len(fields))
+	for i, field := range fields {
+		a[i] = quoteTokenIfNeeded(field)
+	}
+	s := "fields " + strings.Join(a, ", ")
+	q.mustAppendPipe(s)
+}
+
 // AddPipeOffsetLimit adds `| offset <offset> | limit <limit>` pipes to q.
 //
 // See https://docs.victoriametrics.com/victorialogs/logsql/#offset-pipe
@@ -904,6 +969,12 @@ func (q *Query) mustAppendPipe(s string) {
 func (q *Query) optimize() {
 	q.visitSubqueries(func(q *Query) {
 		q.optimizeNoSubqueries()
+	})
+}
+
+func (q *Query) enablePrintOptions() {
+	q.visitSubqueries(func(q *Query) {
+		q.opts.needPrint = true
 	})
 }
 
@@ -2216,10 +2287,8 @@ func parseAnyCaseFilter(lex *lexer, fieldName string) (filter, error) {
 func parseFuncArgMaybePrefix(lex *lexer, fieldName string, callback func(arg string, isPrefiFilter bool) (filter, error)) (filter, error) {
 	lexState := lex.backupState()
 
-	funcName, err := lex.nextCompoundToken()
-	if err != nil {
-		return nil, err
-	}
+	funcName := lex.token
+	lex.nextToken()
 
 	if !lex.isKeyword("(") {
 		lex.restoreState(lexState)
@@ -2863,10 +2932,8 @@ func tryParseFilterLTString(lex *lexer, fieldName, op string, includeMaxValue bo
 func parseFilterRange(lex *lexer, fieldName string) (filter, error) {
 	lexState := lex.backupState()
 
-	funcName, err := lex.nextCompoundToken()
-	if err != nil {
-		return nil, err
-	}
+	funcName := lex.token
+	lex.nextToken()
 
 	// Parse minValue
 	includeMinValue := false
@@ -2959,10 +3026,8 @@ func parseFuncArg(lex *lexer, fieldName string, callback func(funcName, arg stri
 func parseFuncArgs(lex *lexer, fieldName string, callback func(funcName string, args []string) (filter, error)) (filter, error) {
 	lexState := lex.backupState()
 
-	funcName, err := lex.nextCompoundToken()
-	if err != nil {
-		return nil, err
-	}
+	funcName := lex.token
+	lex.nextToken()
 
 	if !lex.isKeyword("(") {
 		lex.restoreState(lexState)
@@ -2978,16 +3043,11 @@ func parseFuncArgs(lex *lexer, fieldName string, callback func(funcName string, 
 }
 
 func parseFuncArgsPossibleWildcard(lex *lexer, fieldName string, callback func(args []string) (filter, error)) (filter, error) {
-	lexState := lex.backupState()
-
-	funcName, err := lex.nextCompoundToken()
-	if err != nil {
-		return nil, err
-	}
+	funcName := lex.token
+	lex.nextToken()
 
 	if !lex.isKeyword("(") {
-		lex.restoreState(lexState)
-		return parseFilterPhrase(lex, fieldName)
+		return nil, fmt.Errorf("the %q must be put in quotes", funcName)
 	}
 
 	args, isWildcard, err := parseArgsInParensPossibleWildcard(lex)

@@ -67,8 +67,13 @@ func datadogLogsIngestion(w http.ResponseWriter, r *http.Request) bool {
 	}
 
 	if len(cp.StreamFields) == 0 {
+		if err := logstorage.CheckStreamFieldNames(*datadogStreamFields); err != nil {
+			httpserver.Errorf(w, r, "invalid stream field names at -datadog.streamFields=%s: %s", datadogStreamFields, err)
+			return true
+		}
 		cp.StreamFields = *datadogStreamFields
 	}
+
 	if len(cp.IgnoreFields) == 0 {
 		cp.IgnoreFields = *datadogIgnoreFields
 	}

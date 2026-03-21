@@ -686,6 +686,9 @@ func getConfigs(typ string, argIdx int, streamFieldsArg, ignoreFieldsArg, decolo
 	if err != nil {
 		return nil, fmt.Errorf("cannot parse -syslog.streamFields.%s=%q: %w", typ, streamFieldsStr, err)
 	}
+	if err := logstorage.CheckStreamFieldNames(streamFields); err != nil {
+		return nil, fmt.Errorf("invalid stream field names inside -syslog.streamFields.%s=%q: %w", typ, streamFieldsStr, err)
+	}
 
 	ignoreFieldsStr := ignoreFieldsArg.GetOptionalArg(argIdx)
 	ignoreFields, err := parseFieldsList(ignoreFieldsStr)

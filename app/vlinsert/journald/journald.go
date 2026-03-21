@@ -60,8 +60,13 @@ func getCommonParams(r *http.Request) (*insertutil.CommonParams, error) {
 		cp.TimeFields = []string{*journaldTimeField}
 	}
 	if len(cp.StreamFields) == 0 {
-		cp.StreamFields = getStreamFields()
+		streamFields := getStreamFields()
+		if err := logstorage.CheckStreamFieldNames(streamFields); err != nil {
+			return nil, fmt.Errorf("invalid stream field names in -journald.streamFields=%s: %s", journaldStreamFields, err)
+		}
+		cp.StreamFields = streamFields
 	}
+
 	if len(cp.IgnoreFields) == 0 {
 		cp.IgnoreFields = *journaldIgnoreFields
 	}

@@ -100,9 +100,7 @@ func (app *Vlcluster) JSONLineWrite(t *testing.T, records []string, opts IngestO
 	}
 }
 
-// LogsQLQuery is a test helper function that performs
-// PromQL/MetricsQL range query by sending a HTTP POST request to
-// /select/logsql/query endpoint.
+// LogsQLQuery is a test helper function that performs query by sending a HTTP POST request to /select/logsql/query endpoint.
 //
 // See https://docs.victoriametrics.com/victorialogs/querying/#querying-logs
 func (app *Vlcluster) LogsQLQuery(t *testing.T, query string, opts QueryOpts) *LogsQLQueryResponse {
@@ -134,6 +132,84 @@ func (app *Vlcluster) Facets(t *testing.T, query string, opts FacetsOpts) string
 		t.Fatalf("unexpected status code from %s: %d; want %d", url, statusCode, http.StatusOK)
 	}
 	return res
+}
+
+// FieldNames sends HTTP POST request to /select/logsql/field_names endpoint and returns the plain response.
+//
+// See https://docs.victoriametrics.com/victorialogs/querying/#querying-field-names
+func (app *Vlcluster) FieldNames(t *testing.T, query string, opts FieldNamesOpts) string {
+	t.Helper()
+
+	values := opts.asURLValues()
+	values.Add("query", query)
+
+	url := fmt.Sprintf("http://%s/select/logsql/field_names", app.selectNode.httpListenAddr)
+	return app.selectNode.cli.PostFormSuccess(t, url, values)
+}
+
+// FieldValues sends HTTP POST request to /select/logsql/field_values endpoint and returns the plain response.
+//
+// See https://docs.victoriametrics.com/victorialogs/querying/#querying-field-values
+func (app *Vlcluster) FieldValues(t *testing.T, query string, opts FieldValuesOpts) string {
+	t.Helper()
+
+	values := opts.asURLValues()
+	values.Add("query", query)
+
+	url := fmt.Sprintf("http://%s/select/logsql/field_values", app.selectNode.httpListenAddr)
+	return app.selectNode.cli.PostFormSuccess(t, url, values)
+}
+
+// StreamFieldNames sends HTTP POST request to /select/logsql/stream_field_names endpoint and returns the plain response.
+//
+// See https://docs.victoriametrics.com/victorialogs/querying/#querying-stream-field-names
+func (app *Vlcluster) StreamFieldNames(t *testing.T, query string, opts StreamFieldNamesOpts) string {
+	t.Helper()
+
+	values := opts.asURLValues()
+	values.Add("query", query)
+
+	url := fmt.Sprintf("http://%s/select/logsql/stream_field_names", app.selectNode.httpListenAddr)
+	return app.selectNode.cli.PostFormSuccess(t, url, values)
+}
+
+// StreamFieldValues sends HTTP POST request to /select/logsql/stream_field_values endpoint and returns the plain response.
+//
+// See https://docs.victoriametrics.com/victorialogs/querying/#querying-stream-field-values
+func (app *Vlcluster) StreamFieldValues(t *testing.T, query string, opts StreamFieldValuesOpts) string {
+	t.Helper()
+
+	values := opts.asURLValues()
+	values.Add("query", query)
+
+	url := fmt.Sprintf("http://%s/select/logsql/stream_field_values", app.selectNode.httpListenAddr)
+	return app.selectNode.cli.PostFormSuccess(t, url, values)
+}
+
+// Streams sends HTTP POST request to /select/logsql/streams endpoint and returns the plain response.
+//
+// See https://docs.victoriametrics.com/victorialogs/querying/#querying-streams
+func (app *Vlcluster) Streams(t *testing.T, query string, opts StreamsOpts) string {
+	t.Helper()
+
+	values := opts.asURLValues()
+	values.Add("query", query)
+
+	url := fmt.Sprintf("http://%s/select/logsql/streams", app.selectNode.httpListenAddr)
+	return app.selectNode.cli.PostFormSuccess(t, url, values)
+}
+
+// LogsQLQueryRaw sends HTTP POST request to /select/logsql/query endpoint and returns the plain response with status code.
+//
+// See https://docs.victoriametrics.com/victorialogs/querying/#querying-logs
+func (app *Vlcluster) LogsQLQueryRaw(t *testing.T, query string, opts QueryOpts) (string, int) {
+	t.Helper()
+
+	values := opts.asURLValues()
+	values.Add("query", query)
+
+	url := fmt.Sprintf("http://%s/select/logsql/query", app.selectNode.httpListenAddr)
+	return app.selectNode.cli.PostForm(t, url, values)
 }
 
 // String returns the string representation of the app state.
