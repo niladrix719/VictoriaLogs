@@ -23,6 +23,7 @@ according to the following docs:
 ## tip
 
 * BUGFIX: [Kubernetes Collector](https://docs.victoriametrics.com/victorialogs/vlagent/#collect-kubernetes-pod-logs): fix spurious `cannot parse WatchEvent json response: EOF` errors in logs. These errors were harmless but could cause confusion when monitoring application health.
+* BUGFIX: [web UI](https://docs.victoriametrics.com/victorialogs/querying/#web-ui): improve context view highlight visibility in dark theme. The selected log entry is now highlighted with a more visible blue tint instead of barely visible gray background. See [#1196](https://github.com/VictoriaMetrics/VictoriaLogs/issues/1196).
 
 ## [v1.47.0](https://github.com/VictoriaMetrics/VictoriaLogs/releases/tag/v1.47.0)
 
