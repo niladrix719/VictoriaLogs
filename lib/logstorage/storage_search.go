@@ -325,11 +325,16 @@ func runPipes(qctx *QueryContext, pipes []pipe, search searchFunc, writeBlock wr
 }
 
 // GetFieldNames returns field names for the given qctx.
-func (s *Storage) GetFieldNames(qctx *QueryContext) ([]ValueWithHits, error) {
+//
+// If the filter is non-empty, then only the field names containing the filter substring are returned.
+func (s *Storage) GetFieldNames(qctx *QueryContext, filter string) ([]ValueWithHits, error) {
 	q := qctx.Query
 
 	pipes := append([]pipe{}, q.pipes...)
 	pipeStr := "field_names"
+	if filter != "" {
+		pipeStr += " filter " + quoteTokenIfNeeded(filter)
+	}
 	lex := newLexer(pipeStr, q.timestamp)
 
 	p, err := parsePipeFieldNames(lex)
@@ -496,13 +501,20 @@ func isLastPipeUniq(pipes []pipe) bool {
 
 // GetFieldValues returns unique values with the number of hits for the given fieldName returned by qctx.
 //
+// If the filter is non-empty, then only the field values containing the filter substring are returned.
+//
 // If limit > 0, then up to limit unique values are returned.
-func (s *Storage) GetFieldValues(qctx *QueryContext, fieldName string, limit uint64) ([]ValueWithHits, error) {
+func (s *Storage) GetFieldValues(qctx *QueryContext, fieldName, filter string, limit uint64) ([]ValueWithHits, error) {
 	q := qctx.Query
 
 	pipes := append([]pipe{}, q.pipes...)
-	quotedFieldName := quoteTokenIfNeeded(fieldName)
-	pipeStr := fmt.Sprintf("field_values %s limit %d", quotedFieldName, limit)
+	pipeStr := "field_values " + quoteTokenIfNeeded(fieldName)
+	if filter != "" {
+		pipeStr += " filter " + quoteTokenIfNeeded(filter)
+	}
+	if limit > 0 {
+		pipeStr += fmt.Sprintf(" limit %d", limit)
+	}
 	lex := newLexer(pipeStr, q.timestamp)
 
 	pu, err := parsePipeFieldValues(lex)
@@ -571,7 +583,9 @@ func toValuesWithHits(m map[string]*uint64) []ValueWithHits {
 }
 
 // GetStreamFieldNames returns stream field names for the given qctx.
-func (s *Storage) GetStreamFieldNames(qctx *QueryContext) ([]ValueWithHits, error) {
+//
+// If the filter is non-empty, then only the field names containing the filter substring are returned.
+func (s *Storage) GetStreamFieldNames(qctx *QueryContext, filter string) ([]ValueWithHits, error) {
 	streams, err := s.GetStreams(qctx, math.MaxUint64)
 	if err != nil {
 		return nil, err
@@ -579,6 +593,10 @@ func (s *Storage) GetStreamFieldNames(qctx *QueryContext) ([]ValueWithHits, erro
 
 	m := make(map[string]*uint64)
 	forEachStreamField(streams, func(f Field, hits uint64) {
+		if filter != "" && !strings.Contains(f.Name, filter) {
+			return
+		}
+
 		pHits := m[f.Name]
 		if pHits == nil {
 			nameCopy := strings.Clone(f.Name)
@@ -594,8 +612,10 @@ func (s *Storage) GetStreamFieldNames(qctx *QueryContext) ([]ValueWithHits, erro
 
 // GetStreamFieldValues returns stream field values for the given fieldName and the given qctx.
 //
+// If the filter is non-empty, then only the field values containing the filter substring are returned.
+//
 // If limit > 0, then up to limit unique values are returned.
-func (s *Storage) GetStreamFieldValues(qctx *QueryContext, fieldName string, limit uint64) ([]ValueWithHits, error) {
+func (s *Storage) GetStreamFieldValues(qctx *QueryContext, fieldName, filter string, limit uint64) ([]ValueWithHits, error) {
 	streams, err := s.GetStreams(qctx, math.MaxUint64)
 	if err != nil {
 		return nil, err
@@ -603,6 +623,10 @@ func (s *Storage) GetStreamFieldValues(qctx *QueryContext, fieldName string, lim
 
 	m := make(map[string]*uint64)
 	forEachStreamField(streams, func(f Field, hits uint64) {
+		if filter != "" && !strings.Contains(f.Value, filter) {
+			return
+		}
+
 		if f.Name != fieldName {
 			return
 		}
@@ -627,14 +651,14 @@ func (s *Storage) GetStreamFieldValues(qctx *QueryContext, fieldName string, lim
 //
 // If limit > 0, then up to limit unique streams are returned.
 func (s *Storage) GetStreams(qctx *QueryContext, limit uint64) ([]ValueWithHits, error) {
-	return s.GetFieldValues(qctx, "_stream", limit)
+	return s.GetFieldValues(qctx, "_stream", "", limit)
 }
 
 // GetStreamIDs returns stream_id field values from qctx results.
 //
 // If limit > 0, then up to limit unique streams are returned.
 func (s *Storage) GetStreamIDs(qctx *QueryContext, limit uint64) ([]ValueWithHits, error) {
-	return s.GetFieldValues(qctx, "_stream_id", limit)
+	return s.GetFieldValues(qctx, "_stream_id", "", limit)
 }
 
 // GetTenantIDs returns tenantIDs for the given start and end.

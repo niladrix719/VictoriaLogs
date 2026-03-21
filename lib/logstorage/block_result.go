@@ -376,8 +376,8 @@ func (br *blockResult) initColumnsByFilter(pf *prefixfilter.Filter) {
 	// Add other const columns
 	csh := br.bs.getColumnsHeader()
 	for _, cc := range csh.constColumns {
-		if cc.Name == "" {
-			// We already added _msg column above
+		if isSpecialColumn(cc.Name) {
+			// Special columns have been added above.
 			continue
 		}
 		if pf.MatchString(cc.Name) {
@@ -389,14 +389,25 @@ func (br *blockResult) initColumnsByFilter(pf *prefixfilter.Filter) {
 	chs := csh.columnHeaders
 	for i := range chs {
 		ch := &chs[i]
-		if ch.name == "" {
-			// We already added _msg column above
+		if isSpecialColumn(ch.name) {
+			// Special columns have been added above.
 			continue
 		}
 		if pf.MatchString(ch.name) {
 			br.addColumn(ch)
 		}
 	}
+}
+
+func isSpecialColumn(c string) bool {
+	if len(c) == 0 {
+		// This is a _msg column.
+		return true
+	}
+	if c[0] != '_' {
+		return false
+	}
+	return c == "_time" || c == "_stream" || c == "_stream_id"
 }
 
 // mustInit initializes br with the given bs and bm.

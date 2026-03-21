@@ -539,9 +539,12 @@ func (ddb *datadb) mustMergePartsInternal(pws []*partWrapper, isFinal bool, drop
 		// Fast path: flush a single in-memory part to disk.
 		mp := pws[0].mp
 		mp.MustStoreToDisk(dstPartPath)
+		srcRowsCount := mp.ph.RowsCount
+		dstSize := mp.ph.CompressedSizeBytes
+
 		pwNew := ddb.openCreatedPart(&mp.ph, pws, nil, dstPartPath)
 		ddb.swapSrcWithDstParts(pws, pwNew, dstPartType)
-		ddb.updateMergeMetrics(dstPartType, mp.ph.RowsCount, startTime, mp.ph.CompressedSizeBytes)
+		ddb.updateMergeMetrics(dstPartType, srcRowsCount, startTime, dstSize)
 		return true
 	}
 
@@ -1355,8 +1358,7 @@ func mustRemoveUnusedDirs(path string, partNames []string) {
 	}
 }
 
-// appendPartsToMerge finds optimal parts to merge from src,
-// appends them to dst and returns the result.
+// appendPartsToMerge finds optimal parts to merge from src, appends them to dst and returns the result.
 func appendPartsToMerge(dst, src []*partWrapper, maxOutBytes uint64) []*partWrapper {
 	if len(src) < 2 {
 		// There is no need in merging zero or one part :)

@@ -6,7 +6,7 @@ DOCKER_NAMESPACE ?= victoriametrics
 ROOT_IMAGE ?= alpine:3.23.3
 CERTS_IMAGE := alpine:3.23.3
 
-GO_BUILDER_IMAGE := golang:1.26.0
+GO_BUILDER_IMAGE := golang:1.26.1
 
 BUILDER_IMAGE := local/builder:2.0.0-$(shell echo $(GO_BUILDER_IMAGE) | tr :/ __)-1
 BASE_IMAGE := local/base:1.1.4-$(shell echo $(ROOT_IMAGE) | tr :/ __)-$(shell echo $(CERTS_IMAGE) | tr :/ __)
@@ -67,8 +67,8 @@ package-via-docker: package-base
 		$(DOCKER_BUILD) \
 			--build-arg src_binary=$(APP_NAME)$(APP_SUFFIX)-prod \
 			--build-arg base_image=$(BASE_IMAGE) \
-			--label "org.opencontainers.image.source=https://github.com/VictoriaMetrics/VictoriaMetrics" \
-			--label "org.opencontainers.image.documentation=https://docs.victoriametrics.com/" \
+			--label "org.opencontainers.image.source=https://github.com/VictoriaMetrics/VictoriaLogs" \
+			--label "org.opencontainers.image.documentation=https://docs.victoriametrics.com/victorialogs/" \
 			--label "org.opencontainers.image.title=$(APP_NAME)" \
 			--label "org.opencontainers.image.vendor=VictoriaMetrics" \
 			--label "org.opencontainers.image.version=$(PKG_TAG)" \
@@ -88,8 +88,8 @@ publish-via-docker:
 		--build-arg root_image=$(ROOT_IMAGE) \
 		--build-arg APP_NAME=$(APP_NAME) \
 		--build-arg BINARY_SUFFIX="" \
-		--label "org.opencontainers.image.source=https://github.com/VictoriaMetrics/VictoriaMetrics" \
-		--label "org.opencontainers.image.documentation=https://docs.victoriametrics.com/" \
+		--label "org.opencontainers.image.source=https://github.com/VictoriaMetrics/VictoriaLogs" \
+		--label "org.opencontainers.image.documentation=https://docs.victoriametrics.com/victorialogs/" \
 		--label "org.opencontainers.image.title=$(APP_NAME)" \
 		--label "org.opencontainers.image.vendor=VictoriaMetrics" \
 		--label "org.opencontainers.image.version=$(PKG_TAG)" \
@@ -99,6 +99,7 @@ publish-via-docker:
 		) \
 		-o type=image \
 		--provenance=false \
+		--sbom=true \
 		-f app/$(APP_NAME)/multiarch/Dockerfile \
 		--push \
 		bin

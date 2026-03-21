@@ -120,7 +120,7 @@ func (pt *pipeTop) newPipeProcessor(concurrency int, stopCh <-chan struct{}, can
 	}
 	ptp.shards.Init = func(shard *pipeTopProcessorShard) {
 		shard.pt = pt
-		shard.m.init(uint(concurrency), &shard.stateSizeBudget)
+		shard.m.init(uint(concurrency), "", &shard.stateSizeBudget)
 	}
 	ptp.stateSizeBudget.Store(maxStateSize)
 

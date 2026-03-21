@@ -872,7 +872,7 @@ type tagToStreamIDsRowParser struct {
 	streamIDsParsed bool
 
 	// Tag contains parsed tag after Init call
-	Tag streamTag
+	Tag Field
 
 	// tagBuf is a buffer used during Tag parsing.
 	tagBuf []byte
@@ -885,7 +885,7 @@ func (sp *tagToStreamIDsRowParser) Reset() {
 	sp.TenantID.Reset()
 	sp.StreamIDs = sp.StreamIDs[:0]
 	sp.streamIDsParsed = false
-	sp.Tag.reset()
+	sp.Tag.Reset()
 	sp.tagBuf = sp.tagBuf[:0]
 	sp.tail = nil
 }

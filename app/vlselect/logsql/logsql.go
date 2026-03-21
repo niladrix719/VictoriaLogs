@@ -26,6 +26,7 @@ import (
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/timeutil"
 	"github.com/VictoriaMetrics/metrics"
 	"github.com/valyala/fastjson"
+	"github.com/valyala/quicktemplate"
 
 	"github.com/VictoriaMetrics/VictoriaLogs/app/vlstorage"
 	"github.com/VictoriaMetrics/VictoriaLogs/lib/logstorage"
@@ -38,6 +39,8 @@ var (
 	allowPartialResponseFlag = flag.Bool("search.allowPartialResponse", false, "Whether to allow returning partial responses when some of vlstorage nodes "+
 		"from the -storageNode list are unavailable for querying. This flag works only for cluster setup of VictoriaLogs. "+
 		"See https://docs.victoriametrics.com/victorialogs/querying/#partial-responses")
+
+	maxQueryLen = flagutil.NewBytes("search.maxQueryLen", 16*1024, "The maximum query length in bytes, which can be passed to /select/* endpoints")
 )
 
 // ProcessQueryTimeRangeRequest handles /select/logsql/query_time_range request.
@@ -68,14 +71,10 @@ func ProcessQueryTimeRangeRequest(ctx context.Context, w http.ResponseWriter, r 
 }
 
 func parseQueryTimeRangeArgs(r *http.Request) (int64, int64, bool, error) {
-	qStr := r.FormValue("query")
-	if qStr == "" {
-		return 0, 0, false, fmt.Errorf("`query` arg cannot be empty")
-	}
 	currTimestamp := time.Now().UnixNano()
-	q, err := logstorage.ParseQueryAtTimestamp(qStr, currTimestamp)
+	q, err := parseQueryFromRequest(r, currTimestamp)
 	if err != nil {
-		return 0, 0, false, fmt.Errorf("cannot parse query [%s]: %s", qStr, err)
+		return 0, 0, false, err
 	}
 
 	minTimestamp, maxTimestamp := q.GetFilterTimeRange()
@@ -103,6 +102,21 @@ func parseQueryTimeRangeArgs(r *http.Request) (int64, int64, bool, error) {
 	}
 
 	return minTimestamp, maxTimestamp, hasTimeFilter, nil
+}
+
+func parseQueryFromRequest(r *http.Request, timestamp int64) (*logstorage.Query, error) {
+	qStr := r.FormValue("query")
+	if qStr == "" {
+		return nil, fmt.Errorf("`query` arg cannot be empty")
+	}
+	if len(qStr) > maxQueryLen.IntN() {
+		return nil, fmt.Errorf("the `query` arg length cannot exceed -search.maxQueryLen=%d bytes; the current query length is %d bytes; query=%s", maxQueryLen.IntN(), len(qStr), qStr)
+	}
+	q, err := logstorage.ParseQueryAtTimestamp(qStr, timestamp)
+	if err != nil {
+		return nil, fmt.Errorf("cannot parse `query` arg: %w; query=%s", err, qStr)
+	}
+	return q, nil
 }
 
 func timestampToRFC3339Nano(nsec int64) string {
@@ -135,10 +149,6 @@ func ProcessFacetsRequest(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return
 	}
 	keepConstFields := httputil.GetBool(r, "keep_const_fields")
-
-	// Pipes must be dropped, since it is expected facets are obtained
-	// from the real logs stored in the database.
-	ca.q.DropAllPipes()
 
 	ca.q.AddFacetsPipe(limit, maxValuesPerField, maxValueLen, keepConstFields)
 
@@ -424,14 +434,17 @@ func ProcessFieldNamesRequest(ctx context.Context, w http.ResponseWriter, r *htt
 		return
 	}
 
+	// Filter is used for filtering the returned field names by the given filter substring
+	filter := r.FormValue("filter")
+
 	qctx := ca.newQueryContext(ctx)
 	defer ca.updatePerQueryStatsMetrics()
 
 	// Obtain field names for the given query
 	startTime := time.Now()
-	fieldNames, err := vlstorage.GetFieldNames(qctx)
+	fieldNames, err := vlstorage.GetFieldNames(qctx, filter)
 	if err != nil {
-		httpserver.Errorf(w, r, "cannot obtain field names: %s", err)
+		httpserver.Errorf(w, r, "cannot obtain field names with filter=%q: %s", filter, err)
 		return
 	}
 
@@ -455,12 +468,15 @@ func ProcessFieldValuesRequest(ctx context.Context, w http.ResponseWriter, r *ht
 		return
 	}
 
-	// Parse fieldName query arg
+	// Parse field query arg
 	fieldName := r.FormValue("field")
 	if fieldName == "" {
 		httpserver.Errorf(w, r, "missing 'field' query arg")
 		return
 	}
+
+	// Filter is used for filtering the returned field values by the given filter substring
+	filter := r.FormValue("filter")
 
 	// Parse limit query arg
 	limit, err := getPositiveInt(r, "limit")
@@ -474,9 +490,9 @@ func ProcessFieldValuesRequest(ctx context.Context, w http.ResponseWriter, r *ht
 
 	// Obtain unique values for the given field
 	startTime := time.Now()
-	values, err := vlstorage.GetFieldValues(qctx, fieldName, uint64(limit))
+	values, err := vlstorage.GetFieldValues(qctx, fieldName, filter, uint64(limit))
 	if err != nil {
-		httpserver.Errorf(w, r, "cannot obtain values for field %q: %s", fieldName, err)
+		httpserver.Errorf(w, r, "cannot obtain values for field %q with filter %q: %s", fieldName, filter, err)
 		return
 	}
 
@@ -500,14 +516,17 @@ func ProcessStreamFieldNamesRequest(ctx context.Context, w http.ResponseWriter, 
 		return
 	}
 
+	// Filter is used for filtering the returned field names by the given filter substring
+	filter := r.FormValue("filter")
+
 	qctx := ca.newQueryContext(ctx)
 	defer ca.updatePerQueryStatsMetrics()
 
 	// Obtain stream field names for the given query
 	startTime := time.Now()
-	names, err := vlstorage.GetStreamFieldNames(qctx)
+	names, err := vlstorage.GetStreamFieldNames(qctx, filter)
 	if err != nil {
-		httpserver.Errorf(w, r, "cannot obtain stream field names: %s", err)
+		httpserver.Errorf(w, r, "cannot obtain stream field names with filter %q: %s", filter, err)
 		return
 	}
 
@@ -531,12 +550,15 @@ func ProcessStreamFieldValuesRequest(ctx context.Context, w http.ResponseWriter,
 		return
 	}
 
-	// Parse fieldName query arg
+	// Parse field query arg
 	fieldName := r.FormValue("field")
 	if fieldName == "" {
 		httpserver.Errorf(w, r, "missing 'field' query arg")
 		return
 	}
+
+	// Filter is used for filtering the returned field values by the given filter substring
+	filter := r.FormValue("filter")
 
 	// Parse limit query arg
 	limit, err := getPositiveInt(r, "limit")
@@ -550,9 +572,9 @@ func ProcessStreamFieldValuesRequest(ctx context.Context, w http.ResponseWriter,
 
 	// Obtain stream field values for the given query and the given fieldName
 	startTime := time.Now()
-	values, err := vlstorage.GetStreamFieldValues(qctx, fieldName, uint64(limit))
+	values, err := vlstorage.GetStreamFieldValues(qctx, fieldName, filter, uint64(limit))
 	if err != nil {
-		httpserver.Errorf(w, r, "cannot obtain stream field values: %s", err)
+		httpserver.Errorf(w, r, "cannot obtain stream field values for field %q with filter %q: %s", fieldName, filter, err)
 		return
 	}
 
@@ -1171,20 +1193,11 @@ func ProcessQueryRequest(ctx context.Context, w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	sw := &syncWriter{
-		w: w,
+	format := r.FormValue("format")
+	if format != "" && format != "csv" {
+		httpserver.Errorf(w, r, "unexpected format=%q; expecting 'csv' or ''", format)
+		return
 	}
-
-	var bwShards atomicutil.Slice[bufferedWriter]
-	bwShards.Init = func(shard *bufferedWriter) {
-		shard.sw = sw
-	}
-	defer func() {
-		shards := bwShards.All()
-		for _, shard := range shards {
-			shard.FlushIgnoreErrors()
-		}
-	}()
 
 	if limit > 0 {
 		// Add '| sort by (_time) desc | offset <offset> | limit <limit>' to the end of the query.
@@ -1195,16 +1208,70 @@ func ProcessQueryRequest(ctx context.Context, w http.ResponseWriter, r *http.Req
 		ca.q.AddPipeOffsetLimit(uint64(offset), uint64(limit))
 	}
 
+	var csvHeader []byte
+	if format == "csv" {
+		fields, ok := ca.q.GetFixedFields()
+		if !ok {
+			// Slow path - detect the fields by scanning the logs for the given query.
+			qctx := ca.newQueryContext(ctx)
+			fieldNames, err := vlstorage.GetFieldNames(qctx, "")
+			if err != nil {
+				httpserver.Errorf(w, r, "cannot obtain field names for returning query results in csv format: %s", err)
+				return
+			}
+			fields = make([]string, len(fieldNames))
+			for i, fieldName := range fieldNames {
+				fields[i] = fieldName.Value
+			}
+			sort.Strings(fields)
+			ca.q.AddPipeFields(fields)
+		}
+		csvHeader = appendCSVLine(nil, fields)
+	}
+
+	sw := &syncWriter{
+		w: w,
+	}
+
+	var bwShards atomicutil.Slice[bytesutil.ByteBuffer]
+	defer func() {
+		shards := bwShards.All()
+		for _, shard := range shards {
+			if len(shard.B) > 0 {
+				_, _ = sw.Write(shard.B)
+			}
+		}
+	}()
+
 	startTime := time.Now()
 	writeResponseHeadersOnce := sync.OnceFunc(func() {
 		// Write response headers
 		h := w.Header()
 
-		h.Set("Content-Type", "application/stream+json")
+		if format == "csv" {
+			h.Set("Content-Type", "text/csv")
+		} else {
+			h.Set("Content-Type", "application/stream+json")
+		}
 		ca.writeResponseHeaders(h, startTime)
+
+		if format == "csv" {
+			_, _ = sw.Write(csvHeader)
+		}
 	})
 
+	var appendRow func(dst []byte, columns []logstorage.BlockColumn, rowIdx int) []byte
+
 	needSortFields := !ca.q.IsFixedOutputFieldsOrder()
+	if format == "csv" {
+		if needSortFields {
+			logger.Panicf("BUG: needSortFields must be false for format=csv")
+		}
+		appendRow = appendCSVRow
+	} else {
+		appendRow = appendJSONRow
+	}
+
 	writeBlock := func(workerID uint, db *logstorage.DataBlock) {
 		writeResponseHeadersOnce()
 		rowsCount := db.RowsCount()
@@ -1216,9 +1283,10 @@ func ProcessQueryRequest(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 		bw := bwShards.Get(workerID)
 		for i := range rowsCount {
-			WriteJSONRow(bw, columns, i)
-			if len(bw.buf) > 16*1024 {
-				bw.FlushIgnoreErrors()
+			bw.B = appendRow(bw.B, columns, i)
+			if len(bw.B) > 16*1024 {
+				_, _ = sw.Write(bw.B)
+				bw.B = bw.B[:0]
 			}
 		}
 	}
@@ -1234,6 +1302,48 @@ func ProcessQueryRequest(ctx context.Context, w http.ResponseWriter, r *http.Req
 
 	// This call is needed for the case when the response didn't return any results.
 	writeResponseHeadersOnce()
+}
+
+func appendCSVRow(dst []byte, columns []logstorage.BlockColumn, rowIdx int) []byte {
+	for i := range columns {
+		v := columns[i].Values[rowIdx]
+		dst = appendCSVField(dst, v)
+		if i+1 < len(columns) {
+			dst = append(dst, ',')
+		}
+	}
+	dst = append(dst, '\n')
+	return dst
+}
+
+func appendJSONRow(dst []byte, columns []logstorage.BlockColumn, rowIdx int) []byte {
+	dstLen := len(dst)
+	dst = append(dst, '{')
+	for i := range columns {
+		c := &columns[i]
+
+		name := c.Name
+		value := c.Values[rowIdx]
+		if value == "" {
+			// skip empty fields, since they equal to non-existing fields
+			// according to VictoriaLogs data model.
+			// See https://docs.victoriametrics.com/victorialogs/keyconcepts/#stream-fields
+			continue
+		}
+
+		dst = quicktemplate.AppendJSONString(dst, name, true)
+		dst = append(dst, ':')
+		dst = quicktemplate.AppendJSONString(dst, value, true)
+		dst = append(dst, ',')
+	}
+	if len(dst)-dstLen == 1 {
+		// skip empty row.
+		return dst[:dstLen]
+	}
+
+	// Replace the trailing comma with closing braces
+	dst = append(dst[:len(dst)-1], "}\n"...)
+	return dst
 }
 
 // ProcessTenantIDsRequest processes /select/tenant_ids request.
@@ -1309,24 +1419,6 @@ func (sw *syncWriter) Write(p []byte) (int, error) {
 	n, err := sw.w.Write(p)
 	sw.mu.Unlock()
 	return n, err
-}
-
-type bufferedWriter struct {
-	buf []byte
-	sw  *syncWriter
-}
-
-func (bw *bufferedWriter) Write(p []byte) (int, error) {
-	bw.buf = append(bw.buf, p...)
-
-	// Do not send bw.buf to bw.sw here, since the data at bw.buf may be incomplete (it must end with '\n')
-
-	return len(p), nil
-}
-
-func (bw *bufferedWriter) FlushIgnoreErrors() {
-	_, _ = bw.sw.Write(bw.buf)
-	bw.buf = bw.buf[:0]
 }
 
 type commonArgs struct {
@@ -1411,10 +1503,18 @@ func parseCommonArgsWithConfig(r *http.Request, skipMaxRangeCheck bool) (*common
 	}
 
 	// Parse query
-	qStr := r.FormValue("query")
-	q, err := logstorage.ParseQueryAtTimestamp(qStr, timestamp)
+	q, err := parseQueryFromRequest(r, timestamp)
 	if err != nil {
-		return nil, fmt.Errorf("cannot parse query [%s]: %s", qStr, err)
+		return nil, err
+	}
+
+	// Parse ignore_pipes arg
+	ignorePipes := false
+	if err := getBoolFromRequest(&ignorePipes, r, "ignore_pipes"); err != nil {
+		return nil, err
+	}
+	if ignorePipes {
+		q.DropAllPipes()
 	}
 
 	if startOK || endOK {

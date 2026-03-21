@@ -4,21 +4,21 @@ import Alert from "../../../components/Main/Alert/Alert";
 import Table from "../../../components/Table/Table";
 import Pagination from "../../../components/Main/Pagination/Pagination";
 import { useEffect, useRef } from "react";
-import { LogsFiledValues } from "../../../api/types";
+import { LogsFieldValues } from "../../../api/types";
 import { useTableLogsPaginate } from "../../../components/Views/TableView/hooks/useTableLogsPaginate";
 import { type Column } from "../../../components/Table/types";
 
 export type OverviewTableProps = {
   tableId: string;
-  rows: LogsFiledValues[]
-  columns: Column<LogsFiledValues>[]
+  rows: LogsFieldValues[]
+  columns: Column<LogsFieldValues>[]
   isLoading: boolean;
   error?: string | Error;
   isEmptyList?: boolean;
   emptyListText?: string;
-  onClickRow?: (row: LogsFiledValues, e: MouseEvent) => void;
-  detectActiveRow?: (row: LogsFiledValues) => boolean;
-  actionsRender?: (row: LogsFiledValues) => ReactNode;
+  onClickRow?: (row: LogsFieldValues, e: MouseEvent) => void;
+  detectActiveRow?: (row: LogsFieldValues) => boolean;
+  actionsRender?: (row: LogsFieldValues) => ReactNode;
 }
 
 interface Props extends  OverviewTableProps {
@@ -48,7 +48,16 @@ const OverviewTableBody: FC<Props> = ({
   return (
     <div className="vm-top-fields-body">
       {isLoading && <LineLoader/>}
-      {error && <Alert variant="error">{error}</Alert>}
+      {error && (
+        <div className="vm-top-fields-body__error">
+          <Alert
+            title="Failed to load data"
+            variant="error"
+          >
+            {error}
+          </Alert>
+        </div>
+      )}
 
       {isEmptyList && (
         <div className="vm-empty vm-top-fields-body__empty">

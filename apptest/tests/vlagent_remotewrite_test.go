@@ -124,8 +124,8 @@ func TestVlagentRemoteWriteReplication(t *testing.T) {
 
 	// ingest some data vlagent must hold it in memory
 	vlagent.JSONLineWrite(t, []string{
-		`{"_msg":"ingest jsonline2","_stream":"{}","_time":"2025-06-05T14:30:19.088007Z","bar":"foo"}`,
-		`{"_msg":"ingest jsonline2","_stream":"{}","_time":"2025-06-05T14:30:19.088007Z","foo":"bar"}`,
+		`{"_msg":"ingest jsonline2","_time":"2025-06-05T14:30:19.088007Z","bar":"foo"}`,
+		`{"_msg":"ingest jsonline2","_time":"2025-06-05T14:30:19.088007Z","foo":"bar"}`,
 	}, apptest.IngestOpts{})
 
 	// check alive storage received data
