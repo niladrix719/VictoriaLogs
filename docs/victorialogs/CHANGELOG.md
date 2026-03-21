@@ -23,6 +23,7 @@ according to the following docs:
 ## tip
 
 * BUGFIX: [Kubernetes Collector](https://docs.victoriametrics.com/victorialogs/vlagent/#collect-kubernetes-pod-logs): fix spurious `cannot parse WatchEvent json response: EOF` errors in logs. These errors were harmless but could cause confusion when monitoring application health.
+* BUGFIX: [web UI](https://docs.victoriametrics.com/victorialogs/querying/#web-ui): fix stream context view where the selected log overlapped transparently with content below when scrolling. See [#1185](https://github.com/VictoriaMetrics/VictoriaLogs/issues/1185).
 
 ## [v1.47.0](https://github.com/VictoriaMetrics/VictoriaLogs/releases/tag/v1.47.0)
 
