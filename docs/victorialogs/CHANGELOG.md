@@ -24,6 +24,7 @@ according to the following docs:
 
 * FEATURE: [querying API](https://docs.victoriametrics.com/victorialogs/querying/): allow using [`limit`](https://docs.victoriametrics.com/victorialogs/logsql/#limit-pipe) and [`offset`](https://docs.victoriametrics.com/victorialogs/logsql/#offset-pipe) pipes after the [`stats` pipe](https://docs.victoriametrics.com/victorialogs/logsql/#stats-pipe) in queries to [`/select/logsql/stats_query`](https://docs.victoriametrics.com/victorialogs/querying/#querying-log-stats). This enables the usage for these pipes in [alerting and recording rules for VictoriaLogs](https://docs.victoriametrics.com/victorialogs/vmalert/). See [#1296](https://github.com/VictoriaMetrics/VictoriaLogs/issues/1296).
 * BUGFIX: [web UI](https://docs.victoriametrics.com/victorialogs/querying/#web-ui): sanitize markdown URLs in logs rendered with `markdown parsing` enabled, allowing only `http`, `https`, `mailto`, and `tel` schemes for active links and images. See [#1313](https://github.com/VictoriaMetrics/VictoriaLogs/pull/1313).
+* BUGFIX: [web UI](https://docs.victoriametrics.com/victorialogs/querying/#web-ui): improve context view highlight visibility in dark theme. The selected log entry is now highlighted with a more visible blue tint instead of barely visible gray background. See [#1196](https://github.com/VictoriaMetrics/VictoriaLogs/issues/1196).
 
 ## [v1.50.0](https://github.com/VictoriaMetrics/VictoriaLogs/releases/tag/v1.50.0)
 
@@ -116,7 +117,6 @@ Released at 2026-03-11
 * BUGFIX: [LogsQL](https://docs.victoriametrics.com/victorialogs/logsql/): preserve existing target field values for `extract if (...)` and `extract_regexp if (...)` when the `if (...)` condition doesn't match. See [#1153](https://github.com/VictoriaMetrics/VictoriaLogs/issues/1153).
 * BUGFIX: [web UI](https://docs.victoriametrics.com/victorialogs/querying/#web-ui): fix incorrect bar width in the Hits graph in Stats view mode. See [#1149](https://github.com/VictoriaMetrics/VictoriaLogs/issues/1149).
 * BUGFIX: [vlagent](https://docs.victoriametrics.com/victorialogs/vlagent/): include missing `_time` field for outgoing logs when using [jsonline format](https://docs.victoriametrics.com/victorialogs/vlagent/#remote-write-format). Previously, `vlagent` omitted the `_time` field when sending logs to remote storage in this format.
-* BUGFIX: [web UI](https://docs.victoriametrics.com/victorialogs/querying/#web-ui): improve context view highlight visibility in dark theme. The selected log entry is now highlighted with a more visible blue tint instead of barely visible gray background. See [#1196](https://github.com/VictoriaMetrics/VictoriaLogs/issues/1196).
 
 ## [v1.47.0](https://github.com/VictoriaMetrics/VictoriaLogs/releases/tag/v1.47.0)
 
