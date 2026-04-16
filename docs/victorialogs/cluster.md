@@ -61,8 +61,8 @@ sequenceDiagram
 
     Note over QC,VL: Query Flow
     QC->>VL: Query via HTTP endpoints
-    VL->>VS1: GET /internal/select/* (HTTP)
-    VL->>VS2: GET /internal/select/* (HTTP)
+    VL->>VS1: POST /internal/select/* (HTTP)
+    VL->>VS2: POST /internal/select/* (HTTP)
     VS1-->>VL: Return local results
     VS2-->>VL: Return local results
     VL->>QC: Processed & aggregated results
@@ -195,6 +195,7 @@ See [Security and Load balancing docs](https://docs.victoriametrics.com/victoria
 
 It is possible to disallow access to `/internal/insert` and `/internal/select/*` endpoints at a single-node VictoriaLogs instance
 by running it with `-internalinsert.disable` and `-internalselect.disable` command-line flags.
+The `-insert.disable` and `-select.disable` flags are broader than `-internalinsert.disable` and `-internalselect.disable`: they disable both the public and the corresponding internal endpoints.
 
 ### TLS
 
@@ -232,7 +233,7 @@ Another option is to use third-party HTTP proxies such as [vmauth](https://docs.
 between VictoriaLogs cluster components over untrusted networks.
 
 By default, all the components (vlinsert, vlselect, vlstorage) support all the HTTP endpoints including `/insert/*` and `/select/*`.
-It is recommended to disable select endpoints on `vlinsert` and insert endpoints on `vlselect`:
+It is recommended to disable select endpoints on dedicated `vlinsert` nodes and insert endpoints on dedicated `vlselect` nodes:
 
 ```sh
 # Disable select endpoints on vlinsert
@@ -310,8 +311,8 @@ If you want running VictoriaLogs cluster in Kubernetes, then please read [these 
 Download and unpack the latest VictoriaLogs release:
 
 ```sh
-curl -L -O https://github.com/VictoriaMetrics/VictoriaLogs/releases/download/v1.48.0/victoria-logs-linux-amd64-v1.48.0.tar.gz
-tar xzf victoria-logs-linux-amd64-v1.48.0.tar.gz
+curl -L -O https://github.com/VictoriaMetrics/VictoriaLogs/releases/download/v1.50.0/victoria-logs-linux-amd64-v1.50.0.tar.gz
+tar xzf victoria-logs-linux-amd64-v1.50.0.tar.gz
 ```
 
 Start the first [`vlstorage` node](https://docs.victoriametrics.com/victorialogs/cluster/#architecture), which accepts incoming requests at the port `9491` and stores the ingested logs in the `victoria-logs-data-1` directory:

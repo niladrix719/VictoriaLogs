@@ -57,7 +57,7 @@ func (pf *pipeFieldValues) hasFilterInWithQuery() bool {
 	return false
 }
 
-func (pf *pipeFieldValues) initFilterInValues(_ *inValuesCache, _ getFieldValuesFunc, _ bool) (pipe, error) {
+func (pf *pipeFieldValues) initFilterInValues(_ *inValuesCache, _ getFieldValuesFunc) (pipe, error) {
 	return pf, nil
 }
 
@@ -77,10 +77,7 @@ func (pf *pipeFieldValues) newPipeProcessor(concurrency int, stopCh <-chan struc
 }
 
 func (pf *pipeFieldValues) getHitsFieldName() string {
-	if pf.field == "hits" {
-		return "hitss"
-	}
-	return "hits"
+	return getUniqueResultName("hits", []string{pf.field})
 }
 
 func parsePipeFieldValues(lex *lexer) (pipe, error) {

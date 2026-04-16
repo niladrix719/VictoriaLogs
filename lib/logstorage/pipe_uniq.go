@@ -2,7 +2,6 @@ package logstorage
 
 import (
 	"fmt"
-	"slices"
 	"sync"
 	"sync/atomic"
 
@@ -79,7 +78,7 @@ func (pu *pipeUniq) hasFilterInWithQuery() bool {
 	return false
 }
 
-func (pu *pipeUniq) initFilterInValues(_ *inValuesCache, _ getFieldValuesFunc, _ bool) (pipe, error) {
+func (pu *pipeUniq) initFilterInValues(_ *inValuesCache, _ getFieldValuesFunc) (pipe, error) {
 	return pu, nil
 }
 
@@ -588,12 +587,7 @@ func parsePipeUniq(lex *lexer) (pipe, error) {
 	}
 	if lex.isKeyword("hits") {
 		lex.nextToken()
-		hitsFieldName := "hits"
-		for slices.Contains(pu.byFields, hitsFieldName) {
-			hitsFieldName += "s"
-		}
-
-		pu.hitsFieldName = hitsFieldName
+		pu.hitsFieldName = getUniqueResultName("hits", pu.byFields)
 	}
 
 	if lex.isKeyword("limit") {

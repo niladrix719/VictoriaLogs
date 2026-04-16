@@ -724,6 +724,16 @@ func TestStorageRunQuery(t *testing.T) {
 			},
 		})
 	})
+	t.Run("stats-switch", func(t *testing.T) {
+		f(t, `* | stats count() as rows, count() switch(default as other, case({instance="host-1:234"}) host1, if({instance="host-2:234"}) host2)`, [][]Field{
+			{
+				{"rows", "1155"},
+				{"other", "385"},
+				{"host1", "385"},
+				{"host2", "385"},
+			},
+		})
+	})
 	t.Run("query_stats-sum_len", func(t *testing.T) {
 		f(t, `* | sum_len(*) | query_stats | keep TimestampsRead, ValuesRead, RowsFound`, [][]Field{
 			{
@@ -755,6 +765,41 @@ func TestStorageRunQuery(t *testing.T) {
 		f(t, `_stream_id:in(tenant.id:2 | fields _stream_id) | stats count() rows`, [][]Field{
 			{
 				{"rows", "105"},
+			},
+		})
+	})
+	t.Run("field-prefix-filter-match", func(t *testing.T) {
+		f(t, `s*:foo | stats count() rows`, [][]Field{
+			{
+				{"rows", "1155"},
+			},
+		})
+	})
+	t.Run("field-prefix-filter-match-in-filter-pipe", func(t *testing.T) {
+		f(t, `* | format "foo" as bar | filter s*:foo | stats count() rows`, [][]Field{
+			{
+				{"rows", "1155"},
+			},
+		})
+	})
+	t.Run("field-prefix-filter-non-existing-prefix", func(t *testing.T) {
+		f(t, `f*:foo | stats count() rows`, [][]Field{
+			{
+				{"rows", "0"},
+			},
+		})
+	})
+	t.Run("field-prefix-filter-all-fields-match", func(t *testing.T) {
+		f(t, `*:0 | stats count() rows`, [][]Field{
+			{
+				{"rows", "675"},
+			},
+		})
+	})
+	t.Run("field-prefix-filter-all-fields-mismatch", func(t *testing.T) {
+		f(t, `*:123343 | stats count() rows`, [][]Field{
+			{
+				{"rows", "0"},
 			},
 		})
 	})
@@ -1051,6 +1096,53 @@ func TestStorageRunQuery(t *testing.T) {
 			},
 		})
 	})
+	t.Run("pipe-join-inline-rows", func(t *testing.T) {
+		f(t, `'message 5' | stats by (instance) count() x
+			| join on (instance) rows(
+				{"instance":"host-0:234","foo":"bar"}
+				{"instance":"host-2:234","abc":"def","x":"y","z":"qwe"}
+			)`, [][]Field{
+			{
+				{"instance", "host-0:234"},
+				{"x", "55"},
+				{"foo", "bar"},
+			},
+			{
+				{"instance", "host-2:234"},
+				{"x", "55"},
+				{"abc", "def"},
+				{"z", "qwe"},
+			},
+			{
+				{"instance", "host-1:234"},
+				{"x", "55"},
+			},
+		})
+	})
+	t.Run("pipe-join-inline-rows-prefix", func(t *testing.T) {
+		f(t, `'message 5' | stats by (instance) count() x
+			| join on (instance) rows(
+				{"instance":"host-0:234","foo":"bar"}
+				{"instance":"host-2:234","abc":"def","x":"y","z":"qwe"}
+			) prefix "abc."`, [][]Field{
+			{
+				{"instance", "host-0:234"},
+				{"x", "55"},
+				{"abc.foo", "bar"},
+			},
+			{
+				{"instance", "host-2:234"},
+				{"x", "55"},
+				{"abc.abc", "def"},
+				{"abc.x", "y"},
+				{"abc.z", "qwe"},
+			},
+			{
+				{"instance", "host-1:234"},
+				{"x", "55"},
+			},
+		})
+	})
 
 	// Close the storage and delete its data
 	s.MustClose()
@@ -1135,13 +1227,9 @@ func TestStorageSearch(t *testing.T) {
 			maxTimestamp: maxTimestamp,
 		})
 		if sf != nil {
-			filters = append(filters, &filterStream{
-				f: sf,
-			})
+			filters = append(filters, newFilterStream(sf))
 		}
-		return &filterAnd{
-			filters: filters,
-		}
+		return newFilterAnd(filters)
 	}
 
 	t.Run("missing-tenant-smaller-than-existing", func(_ *testing.T) {
@@ -1296,15 +1384,10 @@ func TestStorageSearch(t *testing.T) {
 		minTimestamp := baseTimestamp
 		maxTimestamp := baseTimestamp + rowsPerBlock*1e9 + blocksPerStream
 		f := getBaseFilter(minTimestamp, maxTimestamp, sf)
-		f = &filterAnd{
-			filters: []filter{
-				f,
-				&filterRegexp{
-					fieldName: "_msg",
-					re:        mustCompileRegex("message [02] at "),
-				},
-			},
-		}
+		f = newFilterAnd([]filter{
+			f,
+			newFilterRegexp("_msg", mustCompileRegex("message [02] at ")),
+		})
 		sso := newTestStorageSearchOptions([]TenantID{tenantID}, f, []string{"_msg"})
 		qs := &QueryStats{}
 		var rowsCountTotal atomic.Uint32
@@ -1539,7 +1622,7 @@ func TestStorageSearchHiddenFieldsFilters(t *testing.T) {
 
 	check := func(qStr string, hiddenFieldsFilters, rowsExpected []string) {
 		t.Helper()
-		checkQueryResults(t, s, tenantIDs, qStr, hiddenFieldsFilters, rowsExpected)
+		checkQueryResults(t, s, now, tenantIDs, qStr, hiddenFieldsFilters, rowsExpected)
 	}
 
 	storeRowsForSearchHiddenFieldsFilters(s, tenantIDs, now)

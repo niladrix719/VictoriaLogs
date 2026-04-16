@@ -13,6 +13,9 @@ import (
 //
 // See https://docs.victoriametrics.com/victorialogs/querying/#querying-logs
 type QueryOpts struct {
+	AccountID string
+	ProjectID string
+
 	Timeout      string
 	Start        string
 	End          string
@@ -135,6 +138,25 @@ func (fos *StreamsOpts) asURLValues() url.Values {
 	return uv
 }
 
+// HitsOpts contains params used for query VitoriaLogs via /select/logsql/hits
+//
+// See https://docs.victoriametrics.com/victorialogs/querying/#querying-hits-stats
+type HitsOpts struct {
+	Start string
+	End   string
+	Step  string
+	Field string
+}
+
+func (hos *HitsOpts) asURLValues() url.Values {
+	uv := make(url.Values)
+	addNonEmpty(uv, "start", hos.Start)
+	addNonEmpty(uv, "end", hos.End)
+	addNonEmpty(uv, "step", hos.Step)
+	addNonEmpty(uv, "field", hos.Field)
+	return uv
+}
+
 // FacetsOpts contains params used for querying VictoriaLogs via /select/logsql/facets
 //
 // See https://docs.victoriametrics.com/victorialogs/querying/#querying-facets
@@ -202,6 +224,9 @@ func (qos *StatsQueryRangeOpts) asURLValues() url.Values {
 
 // IngestOpts contains various params used for VictoriaLogs ingesting data
 type IngestOpts struct {
+	AccountID string
+	ProjectID string
+
 	MessageField string
 	StreamFields string
 	TimeField    string
