@@ -1,7 +1,6 @@
 package insertutil
 
 import (
-	"flag"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -17,11 +16,6 @@ import (
 	"github.com/VictoriaMetrics/metrics"
 
 	"github.com/VictoriaMetrics/VictoriaLogs/lib/logstorage"
-)
-
-var (
-	defaultMsgValue = flag.String("defaultMsgValue", "missing _msg field; see https://docs.victoriametrics.com/victorialogs/keyconcepts/#message-field",
-		"Default value for _msg field if the ingested log entry doesn't contain it; see https://docs.victoriametrics.com/victorialogs/keyconcepts/#message-field")
 )
 
 // CommonParams contains common HTTP parameters used by log ingestion APIs.
@@ -351,7 +345,7 @@ func (lmp *logMessageProcessor) MustClose() {
 //
 // MustClose() must be called on the returned LogMessageProcessor when it is no longer needed.
 func (cp *CommonParams) NewLogMessageProcessor(protocolName string, isStreamMode bool) LogMessageProcessor {
-	lr := logstorage.GetLogRows(cp.StreamFields, cp.IgnoreFields, cp.DecolorizeFields, cp.ExtraFields, *defaultMsgValue)
+	lr := logstorage.GetLogRows(cp.StreamFields, cp.IgnoreFields, cp.DecolorizeFields, cp.ExtraFields, *DefaultMsgValue)
 
 	rowsIngestedTotal := metrics.GetOrCreateCounter(fmt.Sprintf("vl_rows_ingested_total{type=%q}", protocolName))
 	bytesIngestedTotal := metrics.GetOrCreateCounter(fmt.Sprintf("vl_bytes_ingested_total{type=%q}", protocolName))
@@ -378,7 +372,7 @@ func (cp *CommonParams) NewLogMessageProcessor(protocolName string, isStreamMode
 
 var (
 	rowsDroppedTotalDebug         = metrics.NewCounter(`vl_rows_dropped_total{reason="debug"}`)
-	rowsDroppedTotalTooManyFields = metrics.NewCounter(`vl_rows_dropped_total{reason="too_many_fields"}`)
+	rowsDroppedTotalTooManyFields = metrics.GetOrCreateCounter(`vl_rows_dropped_total{reason="too_many_fields"}`)
 	_                             = metrics.NewGauge(`vl_insert_processors_count`, func() float64 { return float64(messageProcessorCount.Load()) })
 	messageProcessorCount         atomic.Int64
 )

@@ -94,7 +94,7 @@ func (app *Vlcluster) JSONLineWrite(t *testing.T, records []string, opts IngestO
 		url += "?" + uvs
 	}
 
-	_, statusCode := app.insertNode.cli.Post(t, url, "text/plain", data)
+	_, statusCode := app.insertNode.cli.PostWithTenant(t, opts.AccountID, opts.ProjectID, url, "text/plain", data)
 	if statusCode != http.StatusOK {
 		t.Fatalf("unexpected status code when sending data to %s: got %d, want %d", url, statusCode, http.StatusOK)
 	}
@@ -110,7 +110,7 @@ func (app *Vlcluster) LogsQLQuery(t *testing.T, query string, opts QueryOpts) *L
 	values.Add("query", query)
 
 	url := fmt.Sprintf("http://%s/select/logsql/query", app.selectNode.httpListenAddr)
-	res, statusCode := app.selectNode.cli.PostForm(t, url, values)
+	res, statusCode := app.selectNode.cli.PostFormWithTenant(t, opts.AccountID, opts.ProjectID, url, values)
 	if statusCode != http.StatusOK {
 		t.Fatalf("unexpected status code from %s: %d; want %d", url, statusCode, http.StatusOK)
 	}
@@ -196,6 +196,19 @@ func (app *Vlcluster) Streams(t *testing.T, query string, opts StreamsOpts) stri
 	values.Add("query", query)
 
 	url := fmt.Sprintf("http://%s/select/logsql/streams", app.selectNode.httpListenAddr)
+	return app.selectNode.cli.PostFormSuccess(t, url, values)
+}
+
+// Hits sends HTTP POST request to /select/logsql/hits endpoint and returns the plain response.
+//
+// See https://docs.victoriametrics.com/victorialogs/querying/#querying-hits-stats
+func (app *Vlcluster) Hits(t *testing.T, query string, opts HitsOpts) string {
+	t.Helper()
+
+	values := opts.asURLValues()
+	values.Add("query", query)
+
+	url := fmt.Sprintf("http://%s/select/logsql/hits", app.selectNode.httpListenAddr)
 	return app.selectNode.cli.PostFormSuccess(t, url, values)
 }
 

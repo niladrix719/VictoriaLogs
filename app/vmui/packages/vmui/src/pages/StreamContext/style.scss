@@ -38,11 +38,10 @@
       }
 
       &_dark {
-        background-color: $color-background-body;
-        border: 2px solid rgba($color-dodger-blue, 0.6);
+        background-color: rgba($color-dodger-blue, 0.25);
 
         &:hover {
-          background-color: $color-background-body;
+          background-color: rgba($color-dodger-blue, 0.3);
         }
       }
     }
