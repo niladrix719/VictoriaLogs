@@ -13,25 +13,11 @@
 
   }
 
-  &_modal &__target-row {
-    top: 100px;
-  }
-
   &__target-row {
-    background-color: $color-background-block;
-    border-radius: $border-radius-small;
-    position: sticky;
-    top: 59px;
-    bottom: 0;
-    z-index: 10;
-    padding: 2px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-
     .vm-group-logs-row-content {
       padding-block: $padding-small;
       border-radius: $border-radius-small;
       background-color: $color-tropical-blue;
-      border: 2px solid rgba($color-dodger-blue, 0.5);
 
       &:hover {
         background-color: $color-tropical-blue;
@@ -74,7 +60,7 @@
     gap: $padding-large;
     border-bottom: $border-divider;
     background-color: $color-background-block;
-    z-index: 11;
+    z-index: 1;
 
     &_page {
       border-top: $border-divider;
