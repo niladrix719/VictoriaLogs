@@ -36,6 +36,7 @@ according to the following docs:
 * BUGFIX: [web UI](https://docs.victoriametrics.com/victorialogs/querying/#web-ui): improve context view highlight visibility in dark theme. The selected log entry is now highlighted with a more visible blue tint instead of barely visible gray background. See [#1196](https://github.com/VictoriaMetrics/VictoriaLogs/issues/1196).
 * BUGFIX: [web UI](https://docs.victoriametrics.com/victorialogs/querying/#web-ui): fix live tab ignoring selected stream filters. See [#1342](https://github.com/VictoriaMetrics/VictoriaLogs/issues/1342).
 * BUGFIX: [web UI](https://docs.victoriametrics.com/victorialogs/querying/#web-ui): fix stream context view where the selected log overlapped transparently with content below when scrolling. See [#1185](https://github.com/VictoriaMetrics/VictoriaLogs/issues/1185).
+* BUGFIX: [web UI](https://docs.victoriametrics.com/victorialogs/querying/#web-ui): fix browser navigation issues where the UI state didn't update on URL changes. See [#1056](https://github.com/VictoriaMetrics/VictoriaLogs/issues/1056).
 
 ## [v1.50.0](https://github.com/VictoriaMetrics/VictoriaLogs/releases/tag/v1.50.0)
 
