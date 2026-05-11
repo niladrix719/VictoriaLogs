@@ -1170,6 +1170,7 @@
   "schemaVersion": 42,
   "tags": [
     "kubernetes",
+    "demo",
     "victorialogs"
   ],
   "templating": {
