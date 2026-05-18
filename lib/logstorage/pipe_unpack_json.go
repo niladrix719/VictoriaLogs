@@ -3,7 +3,6 @@ package logstorage
 import (
 	"fmt"
 	"math"
-	"strings"
 
 	"github.com/VictoriaMetrics/VictoriaMetrics/lib/bytesutil"
 
@@ -101,7 +100,7 @@ func (pu *pipeUnpackJSON) visitSubqueries(visitFunc func(q *Query)) {
 
 func (pu *pipeUnpackJSON) newPipeProcessor(_ int, _ <-chan struct{}, _ func(), ppNext pipeProcessor) pipeProcessor {
 	unpackJSON := func(uctx *fieldsUnpackerContext, s string) {
-		s = strings.TrimSpace(s)
+		s = trimJSONWhitespace(s)
 		if len(s) == 0 || s[0] != '{' {
 			// This isn't a JSON object
 			return
