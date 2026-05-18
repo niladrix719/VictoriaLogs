@@ -176,6 +176,18 @@ func TestPipeUnpackJSON(t *testing.T) {
 		},
 	})
 
+	// single row, unpack from _msg with leading and trailing whitespaces
+	f("unpack_json", [][]Field{
+		{
+			{"_msg", "\t \n {\"foo\":\"bar\"}\r\n"},
+		},
+	}, [][]Field{
+		{
+			{"_msg", "\t \n {\"foo\":\"bar\"}\r\n"},
+			{"foo", "bar"},
+		},
+	})
+
 	// failed if condition
 	f("unpack_json if (x:foo)", [][]Field{
 		{
@@ -223,6 +235,15 @@ func TestPipeUnpackJSON(t *testing.T) {
 
 	// single row, unpack from non-json field
 	f("unpack_json from x", [][]Field{
+		{
+			{"x", `foobar`},
+		},
+	}, [][]Field{
+		{
+			{"x", `foobar`},
+		},
+	})
+	f("unpack_json from x fields (foo, bar)", [][]Field{
 		{
 			{"x", `foobar`},
 		},
