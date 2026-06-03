@@ -583,14 +583,14 @@ Example of starting VictoriaLogs with automatic TLS certificate issuing:
     -licenseFile=/path/to/license
 ```
 
-## mTLS
+### mTLS
 
 > This feature requires [Enterprise binaries](https://docs.victoriametrics.com/victoriametrics/enterprise/) for VictoriaLogs components that use mTLS.
 
 Mutual TLS ([mTLS](https://en.wikipedia.org/wiki/Mutual_authentication)) requires both client and server to present valid certificates for authentication.
 Unlike standard TLS where only the server authenticates itself, mTLS enables bidirectional authentication.
 
-### Enabling mTLS on the server
+#### Enabling mTLS on the server
 
 mTLS requires both [standard TLS command-line flags for server](https://docs.victoriametrics.com/victorialogs/security-and-lb/#enabling-tls-on-the-server)
 and additional `-mtls` command-line flag:
@@ -608,7 +608,7 @@ If using certificates signed by a private CA not present in the system trust sto
 1. Install your CA certificate in the system's trusted certificate store.
 1. Specify the CA certificate path manually using `-mtlsCAFile` command-line flag.
 
-### Connecting vlagent to VictoriaLogs with mTLS
+#### Connecting vlagent to VictoriaLogs with mTLS
 
 Specify `-remoteWrite.tlsCertFile` and `-remoteWrite.tlsKeyFile` command-line flags for the corresponding `-remoteWrite.url`
 which requires mTLS. Optionally, specify `-remoteWrite.tlsCAFile`:
@@ -620,7 +620,7 @@ which requires mTLS. Optionally, specify `-remoteWrite.tlsCAFile`:
     -remoteWrite.tlsKeyFile=/path/to/client-key.pem
 ```
 
-## Certificate reloading
+### Certificate reloading
 
 VictoriaLogs automatically re-reads TLS certificate files (server certificates, client certificates, and CA certificates)
 without requiring server or client restarts.
