@@ -22,7 +22,7 @@ according to the following docs:
 
 ## tip
 
-* SECURITY: upgrade Go builder from Go1.26.2 to Go1.26.3. See [the list of issues addressed in Go1.26.3](https://github.com/golang/go/issues?q=milestone%3AGo1.26.3%20label%3ACherryPickApproved).
+* SECURITY: upgrade Go builder from Go1.26.2 to Go1.26.4. See [the list of issues addressed in Go1.26.3](https://github.com/golang/go/issues?q=milestone%3AGo1.26.3%20label%3ACherryPickApproved) and [the list of issues addressed in Go1.26.4](https://github.com/golang/go/issues?q=milestone%3AGo1.26.4%20label%3ACherryPickApproved).
 
 * FEATURE: [alerting](https://docs.victoriametrics.com/victorialogs/vmalert/): add `-vmalert.proxyURL` command-line flag, which allows proxying `/select/vmalert/*` requests from VictoriaLogs to `vmalert`. See [#90](https://github.com/VictoriaMetrics/VictoriaLogs/issues/90).
 * FEATURE: [metrics](https://docs.victoriametrics.com/victorialogs/metrics/): expose filesystem type for storage paths via the `vm_fs_info` metric. This helps identify filesystem-specific issues during troubleshooting. See [#1435](https://github.com/VictoriaMetrics/VictoriaLogs/issues/1435).
