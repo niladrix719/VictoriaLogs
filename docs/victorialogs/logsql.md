@@ -1940,17 +1940,28 @@ See also:
 - [`len` pipe](https://docs.victoriametrics.com/victorialogs/logsql/#len-pipe)
 
 ### coalesce pipe
-`<q> | coalesce(<field1>, ..., <fieldN>) [default "value"] as result_field` [pipe](https://docs.victoriametrics.com/victorialogs/logsql/#pipes) {{% available_from "#" %}}
-returns the first non-empty value from the specified list of fields in order, writing the result as `result_field`. 
+
+`<q> | coalesce(<field1>, ..., <fieldN>) [default "value"] [as result_field]` [pipe](https://docs.victoriametrics.com/victorialogs/logsql/#pipes)
+returns the first non-empty value from the specified list of [log fields](https://docs.victoriametrics.com/victorialogs/keyconcepts/#data-model)
+and stores the result in the `result_field`.
+If the `result_field` isn't set, then the first non-empty value is stored into [`_msg` field](https://docs.victoriametrics.com/victorialogs/keyconcepts/#message-field).
 If all source fields are empty, the optional `default` value is used instead.
 
 This is useful for handling fields that may exist under different names or for providing fallback values when data is missing.
 
-```
+For example, the following query selects logs for the last 5 minutes and stores the first non-empty value among `user_id`, `username` and `email` log fields
+into the `user` field. If all the `user_id`, `username` and `email` fields are empty, then `user` field is set to `anonymous`:
+
+```logsql
 _time:5m | coalesce (user_id, username, email) default "anonymous" as user
 ```
 
-This checks `user_id` first, then `username`, then `email`, and uses "anonymous" if all three are empty.
+The `coalesce(...)` can accept field prefixes ending with `*`. In this case an arbitrary non-empty field with the given prefix is returned.
+For example, the following query sets the `u` field to an arbitrary non-empty field which starts with `user` prefix:
+
+```logsql
+_time:5m | coalesce (user*) as u
+```
 
 ### collapse_nums pipe
 
