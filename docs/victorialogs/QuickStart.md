@@ -104,6 +104,9 @@ Follow these steps to build VictoriaLogs from source code:
   git checkout <commit-hash-here>
   ```
 
+- If you build VictoriaLogs from source in order to verify some bugfix or feature in [Web UI](https://docs.victoriametrics.com/victorialogs/querying/#web-ui),
+  then run `make vmui-update` before the next step.
+
 - Build VictoriaLogs (requires Go to be installed on your computer. See [how to install Go](https://golang.org/doc/install)):
 
   ```sh
