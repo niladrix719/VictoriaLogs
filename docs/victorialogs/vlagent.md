@@ -384,7 +384,7 @@ The `-fileCollector.glob` flag must point to a file or a collection of files wit
 -fileCollector.glob=/var/log/nginx/
 ```
 
-### Supported pattern syntax
+#### Supported pattern syntax
 
 | Pattern          | Description                                                   |
 |------------------|---------------------------------------------------------------|
@@ -418,7 +418,7 @@ To collect logs from hidden files, specify the leading dot explicitly:
 -fileCollector.glob=/var/log/nginx/.*.log
 ```
 
-### Excluding files
+#### Excluding files
 
 To exclude specific files from collection, use `-fileCollector.excludeGlob`:
 
@@ -427,7 +427,7 @@ To exclude specific files from collection, use `-fileCollector.excludeGlob`:
 -fileCollector.excludeGlob=/var/log/com.apple*
 ```
 
-### Multiple glob patterns and ordering
+#### Multiple glob patterns and ordering
 
 Multiple glob patterns can be specified by repeating the flag:
 
