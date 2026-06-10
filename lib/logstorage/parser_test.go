@@ -270,16 +270,16 @@ func TestQuery_AddTimeFilter_StepPropagation(t *testing.T) {
 
 		q, err := ParseQuery(qStr)
 		if err != nil {
-			panic(fmt.Errorf("unexpected error in ParseQuery(%q): %s", qStr, err))
+			panic(fmt.Errorf("unexpected error in ParseQuery(%q): %w", qStr, err))
 		}
 
 		tStart, err := time.Parse(time.RFC3339, tStartStr)
 		if err != nil {
-			panic(fmt.Errorf("cannot parse tStartStr=%q: %s", tStartStr, err))
+			panic(fmt.Errorf("cannot parse tStartStr=%q: %w", tStartStr, err))
 		}
 		tEnd, err := time.Parse(time.RFC3339, tEndStr)
 		if err != nil {
-			panic(fmt.Errorf("cannot parse tEndStr=%q: %s", tEndStr, err))
+			panic(fmt.Errorf("cannot parse tEndStr=%q: %w", tEndStr, err))
 		}
 		timestampEnd := adjustEndTimestamp(tEnd.UnixNano(), tEndStr)
 		q.AddTimeFilter(tStart.UnixNano(), timestampEnd)
