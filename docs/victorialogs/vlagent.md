@@ -48,7 +48,8 @@ Please download and unpack the `vlutils` archive from [releases page](https://gi
 and [Quay](https://quay.io/repository/victoriametrics/vlagent?tab=tags)), then pass the following command-line flags to the `vlagent-prod` binary:
 
 - `-remoteWrite.url` - the VictoriaLogs endpoint for sending the accepted logs to. It must end with `/insert/native`.
-  The `-remoteWrite.url` may refer to [DNS SRV](https://en.wikipedia.org/wiki/SRV_record) address. See [these docs](https://docs.victoriametrics.com/victoriametrics/vmagent/#srv-urls) for details.
+  The `-remoteWrite.url` may refer to [DNS SRV](https://en.wikipedia.org/wiki/SRV_record) address.
+  See [these docs](https://docs.victoriametrics.com/victorialogs/vlagent/#srv-urls) for details.
 
 Example command, which starts `vlagent` for accepting logs over HTTP-based [supported protocols](https://docs.victoriametrics.com/victorialogs/data-ingestion/)
 at the port `9429` and sends the collected logs to VictoriaLogs instance at `victoria-logs-host:9428`:
@@ -762,21 +763,14 @@ according to [these docs](https://docs.victoriametrics.com/victoriametrics/vmaut
 
 ## SRV URLs
 
-[DNS SRVs](https://en.wikipedia.org/wiki/SRV_record) are useful when HTTP services run on different TCP ports or when their TCP ports can change over time (for instance, after a restart).
-
-`vlagent` supports DNS SRV resolution in `-remoteWrite.url` when the hostname starts with `srv+`. For example, if DNS contains SRV records for `victoria-logs`, then:
-
-```sh
--remoteWrite.url=http://srv+victoria-logs/insert/native
-```
-
-When vlagent creates a new TCP connection to the remote endpoint, it resolves the SRV record and uses one of the returned `target:port` addresses, for example:
+`vlagent` supports [DNS SRV](https://en.wikipedia.org/wiki/SRV_record) hostname resolution in the `-remoteWrite.url` command-line flag when the hostname starts with `srv+` prefix.
+For example, the following command instructs `vlagent` to send the data to the TCP address obtained from the `victoria-logs` SRV record:
 
 ```sh
--remoteWrite.url=http://victoria-logs-host:9428/insert/native
+./vlagent -remoteWrite.url=http://srv+victoria-logs/insert/native
 ```
 
-If SRV lookup returns multiple targets, `vlagent` randomly chooses a target per connection.
+If SRV lookup returns multiple targets, `vlagent` randomly chooses a target per every new connection to the remote storage.
 
 ## remote write format
 
