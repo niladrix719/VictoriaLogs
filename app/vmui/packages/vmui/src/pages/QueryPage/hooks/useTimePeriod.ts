@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from "preact/compat";
+import { useMemo, useCallback, useEffect, useRef } from "preact/compat";
 import { useSearchParams } from "react-router-dom";
 import {
   getDurationFromPeriod,
@@ -38,6 +38,7 @@ const normalizeTimePeriod = (period: TimePeriod): TimePeriod => {
 
 export const useTimePeriod = (groupN: number = 0) => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const setSearchParamsRef = useRef(setSearchParams);
 
   const keys = useMemo(() => ({
     relative: getGroupKey(TIME_QUERY_PARAMS.RELATIVE, groupN),
@@ -76,12 +77,12 @@ export const useTimePeriod = (groupN: number = 0) => {
   const setPeriod = useCallback((payload: SetPeriodOptions, navigateOpts?: NavigateOptions) => {
     const timeParams = getUrlParams(payload);
 
-    setSearchParams(prev => {
+    setSearchParamsRef.current(prev => {
       const nextParams = new URLSearchParams(prev);
       timeParams.forEach((value, key) => nextParams.set(key, value));
       return nextParams;
     }, navigateOpts);
-  }, [setSearchParams, getUrlParams]);
+  }, [getUrlParams]);
 
   const period: TimeParams = useMemo(() => {
     if (relativeTime) {
@@ -111,6 +112,10 @@ export const useTimePeriod = (groupN: number = 0) => {
 
     return true;
   }, [relativeTime, setPeriod, endTimeStr]);
+
+  useEffect(() => {
+    setSearchParamsRef.current = setSearchParams;
+  }, [setSearchParams]);
 
   return {
     period,
