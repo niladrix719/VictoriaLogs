@@ -47,7 +47,7 @@ func TestVlsingleStatsQueryRange_Success(t *testing.T) {
 
 	// filter
 	f(`* | stats count() q | filter q:>0`, `{"status":"success","data":{"resultType":"matrix","result":[{"metric":{"__name__":"q"},"values":[[1735689600,"2"]]}]}}`)
-	f(`* | stats count() q | fiter q:>5`, `{"status":"success","data":{"resultType":"matrix","result":[]}}`)
+	f(`* | stats count() q | filter q:>5`, `{"status":"success","data":{"resultType":"matrix","result":[]}}`)
 
 	// math with keep
 	f(`* | stats by (x) count() q, max(x) xmax | math q / xmax as y | sort by (y desc) | keep x, y`, `{"status":"success","data":{"resultType":"matrix","result":[{"metric":{"__name__":"y","x":"1"},"values":[[1735689900,"1"]]},{"metric":{"__name__":"y","x":"2"},"values":[[1735689900,"0.5"]]}]}}`)

@@ -45,7 +45,7 @@ func TestVlsingleStatsQuery_Success(t *testing.T) {
 
 	// filter
 	f(`* | stats count() q | filter q:>0`, `{"status":"success","data":{"resultType":"vector","result":[{"metric":{"__name__":"q"},"value":[1735689900,"2"]}]}}`)
-	f(`* | stats count() q | fiter q:>5`, `{"status":"success","data":{"resultType":"vector","result":[]}}`)
+	f(`* | stats count() q | filter q:>5`, `{"status":"success","data":{"resultType":"vector","result":[]}}`)
 
 	// math with keep
 	f(`* | stats by (x) count() q, max(x) xmax | math q / xmax as y | sort by (y desc) | keep x, y`, `{"status":"success","data":{"resultType":"vector","result":[{"metric":{"__name__":"y","x":"1"},"value":[1735689900,"1"]},{"metric":{"__name__":"y","x":"5"},"value":[1735689900,"0.2"]}]}}`)
