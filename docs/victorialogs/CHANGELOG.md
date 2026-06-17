@@ -22,6 +22,8 @@ according to the following docs:
 
 ## tip
 
+* BUGFIX: [cluster version](https://docs.victoriametrics.com/victorialogs/cluster/): `vlstorage` now returns the error and stops processing an `/internal/select/*` request when the request cannot be parsed, instead of continuing to handle it and writing the response twice.
+
 ## [v1.51.0](https://github.com/VictoriaMetrics/VictoriaLogs/releases/tag/v1.51.0)
 
 Released at 2026-06-17
