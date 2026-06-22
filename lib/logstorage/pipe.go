@@ -164,7 +164,8 @@ func parsePipe(lex *lexer) (pipe, error) {
 		return pf, nil
 	}
 
-	return nil, fmt.Errorf("unexpected pipe %q", lex.token)
+	return nil, fmt.Errorf("unexpected pipe name %q; probably, 'filter' is missing in front of %q; "+
+		"see https://docs.victoriametrics.com/victorialogs/logsql/#filter-pipe", lex.token, lex.token)
 }
 
 func isLikelyStatsPipe(lex *lexer) bool {
