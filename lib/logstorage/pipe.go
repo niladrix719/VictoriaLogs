@@ -232,6 +232,7 @@ func initPipeParsers() {
 		"generate_sequence": parsePipeGenerateSequence,
 		"hash":              parsePipeHash,
 		"join":              parsePipeJoin,
+		"json_array_concat": parsePipeJSONArrayConcat,
 		"json_array_len":    parsePipeJSONArrayLen,
 		"head":              parsePipeLimit,
 		"keep":              parsePipeFields,
