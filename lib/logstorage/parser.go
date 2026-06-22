@@ -3912,7 +3912,7 @@ func isNumberPrefix(s string) bool {
 }
 
 func needQuoteToken(s string) bool {
-	if s == "." {
+	if !isWord(s) {
 		return true
 	}
 
@@ -3924,11 +3924,6 @@ func needQuoteToken(s string) bool {
 		return true
 	}
 
-	for _, r := range s {
-		if !isTokenRune(r) {
-			return true
-		}
-	}
 	return false
 }
 
