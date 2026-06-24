@@ -186,7 +186,7 @@ func parsePipeSetStreamFields(lex *lexer) (pipe, error) {
 	}
 
 	// Parse stream fields
-	streamFieldFilters, err := parseCommaSeparatedFields(lex)
+	streamFieldFilters, err := parseCommaSeparatedFieldFilters(lex)
 	if err != nil {
 		return nil, err
 	}

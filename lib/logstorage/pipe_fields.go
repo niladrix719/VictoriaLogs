@@ -100,7 +100,7 @@ func parsePipeFields(lex *lexer) (pipe, error) {
 	}
 	lex.nextToken()
 
-	fieldFilters, err := parseCommaSeparatedFields(lex)
+	fieldFilters, err := parseCommaSeparatedFieldFilters(lex)
 	if err != nil {
 		return nil, err
 	}
@@ -108,19 +108,4 @@ func parsePipeFields(lex *lexer) (pipe, error) {
 		fieldFilters: fieldFilters,
 	}
 	return pf, nil
-}
-
-func parseCommaSeparatedFields(lex *lexer) ([]string, error) {
-	var fields []string
-	for {
-		field, err := parseFieldFilter(lex)
-		if err != nil {
-			return nil, fmt.Errorf("cannot parse field name: %w", err)
-		}
-		fields = append(fields, field)
-		if !lex.isKeyword(",") {
-			return fields, nil
-		}
-		lex.nextToken()
-	}
 }

@@ -87,7 +87,7 @@ func parsePipeDelete(lex *lexer) (pipe, error) {
 	}
 	lex.nextToken()
 
-	fieldFilters, err := parseCommaSeparatedFields(lex)
+	fieldFilters, err := parseCommaSeparatedFieldFilters(lex)
 	if err != nil {
 		return nil, err
 	}
