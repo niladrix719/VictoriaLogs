@@ -20,7 +20,7 @@ services:
   # vector is logs collector. It collects logs according to vector.yml
   # and forwards them to VictoriaLogs
   vector:
-    image: docker.io/timberio/vector:0.46.X-distroless-libc
+    image: docker.io/timberio/vector:0.56.X-distroless-libc
     volumes:
       - type: bind
         source: /var/run/docker.sock
