@@ -409,6 +409,7 @@ vmauth routes these requests to VictoriaMetrics or VictoriaLogs according to the
 ```
 
 #### Using VictoriaMetrics Cluster
+
 For VictoriaMetrics cluster, Prometheus requests must be routed to a tenant-specific `vmselect` path, because OSS vmalert doesn't add VictoriaMetrics tenant IDs to the datasource URL automatically.
 
 VictoriaLogs requests can keep the same route, because VictoriaLogs tenant IDs are passed via `AccountID` and `ProjectID` HTTP headers instead of URL path segments.
