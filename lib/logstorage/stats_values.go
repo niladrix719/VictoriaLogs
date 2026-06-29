@@ -13,11 +13,21 @@ import (
 
 type statsValues struct {
 	fieldFilters []string
+	sortFields   []*bySortField
 	limit        uint64
 }
 
 func (sv *statsValues) String() string {
 	s := "values(" + fieldFiltersString(sv.fieldFilters) + ")"
+
+	if len(sv.sortFields) > 0 {
+		a := make([]string, len(sv.sortFields))
+		for i, sf := range sv.sortFields {
+			a[i] = sf.String()
+		}
+		s += fmt.Sprintf(" sort by (%s)", strings.Join(a, ", "))
+	}
+
 	if sv.limit > 0 {
 		s += fmt.Sprintf(" limit %d", sv.limit)
 	}
@@ -26,10 +36,28 @@ func (sv *statsValues) String() string {
 
 func (sv *statsValues) updateNeededFields(pf *prefixfilter.Filter) {
 	pf.AddAllowFilters(sv.fieldFilters)
+
+	for _, sf := range sv.sortFields {
+		pf.AddAllowFilter(sf.name)
+	}
 }
 
 func (sv *statsValues) newStatsProcessor(a *chunkedAllocator) statsProcessor {
-	return a.newStatsValuesProcessor()
+	sortFieldsLen := len(sv.sortFields)
+
+	if sortFieldsLen == 0 {
+		return a.newStatsValuesProcessor()
+	}
+
+	if sv.limit <= 0 {
+		svp := a.newStatsValuesSortedProcessor()
+		svp.sortFieldsLen = sortFieldsLen
+		return svp
+	}
+
+	svp := a.newStatsValuesTopkProcessor()
+	svp.sortFieldsLen = sortFieldsLen
+	return svp
 }
 
 type statsValuesProcessor struct {
@@ -231,6 +259,19 @@ func parseStatsValues(lex *lexer) (statsFunc, error) {
 	sv := &statsValues{
 		fieldFilters: fieldFilters,
 	}
+
+	if lex.isKeyword("sort", "order") {
+		lex.nextToken()
+		if lex.isKeyword("by") {
+			lex.nextToken()
+		}
+		sfs, err := parseBySortFields(lex)
+		if err != nil {
+			return nil, fmt.Errorf("cannot parse 'sort': %w", err)
+		}
+		sv.sortFields = sfs
+	}
+
 	if lex.isKeyword("limit") {
 		n, err := parseLimit(lex)
 		if err != nil {

@@ -5427,9 +5427,23 @@ _time:5m | stats values(ip) ips
 
 The returned IP addresses can be unrolled into distinct log entries with [`unroll` pipe](https://docs.victoriametrics.com/victorialogs/logsql/#unroll-pipe).
 
-It is possible to limit the number of returned values with `limit N`. If the `limit` is reached, then a subset of values is returned. This subset isn't guaranteed to be stable across repeated query executions.
+It is possible to limit the number of returned values with `limit N`. If the `limit` is reached, then a subset of values is returned. This subset isn't guaranteed to be stable across repeated query executions, unless the values are ordered with `sort by (...)` - see below.
 
 It is possible to get values for all the fields with common prefix via `values(prefix*)` syntax.
+
+It is possible to sort the returned values by appending `sort by (...)` (or `order by (...)`). The values are sorted according to the given fields of the matching log entries.
+For example, the following query returns `ip` values over the last 5 minutes ordered by ascending [`_time` field](https://docs.victoriametrics.com/victorialogs/keyconcepts/#time-field):
+
+```logsql
+_time:5m | stats values(ip) sort by (_time) as ips
+```
+
+The `sort by (...)` allows selecting top N values for each group when combined with `limit N`. For example, the following query selects up to 3 `ip` values
+for the most recent logs for every `host` over the last 5 minutes:
+
+```logsql
+_time:5m | stats by (host) values(ip) sort by (_time desc) limit 3 as ips
+```
 
 See also:
 

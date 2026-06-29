@@ -2319,6 +2319,8 @@ func TestParseQuery_Success(t *testing.T) {
 	f(`* | stats values(foo) bar`, `* | stats values(foo) as bar`)
 	f(`* | values(foo)`, `* | stats values(foo) as "values(foo)"`)
 	f(`* | stats values(foo) limit 10 bar`, `* | stats values(foo) limit 10 as bar`)
+	f(`* | stats values(foo) order by (x desc, y) bar`, `* | stats values(foo) sort by (x desc, y) as bar`)
+	f(`* | stats values(foo) sort by (x) limit 10 bar`, `* | stats values(foo) sort by (x) limit 10 as bar`)
 	f(`* | stats by(x, y) values(foo, bar) as baz`, `* | stats by (x, y) values(foo, bar) as baz`)
 	f(`* | stats by(x) values(*) y`, `* | stats by (x) values(*) as y`)
 	f(`* | stats by(x) values() limit 1_000 AS y`, `* | stats by (x) values(*) limit 1000 as y`)
