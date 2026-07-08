@@ -43,6 +43,12 @@ var (
 	vmalertProxyURL = flag.String("vmalert.proxyURL", "", "Optional URL for proxying requests to vmalert; see https://docs.victoriametrics.com/victorialogs/#vmalert")
 )
 
+// InitSecretFlags registers secret flags defined under `vlselect` pkg.
+// It has to be called after flag.Parse and before any logging by main function of an application (e.g. victoria-logs, vlagent).
+func InitSecretFlags() {
+	flagutil.RegisterSecretFlag("vmalert.proxyURL")
+}
+
 func getDefaultMaxConcurrentRequests() int {
 	n := cgroup.AvailableCPUs()
 	if n <= 4 {
@@ -62,7 +68,6 @@ func Init() {
 	concurrencyLimitCh = make(chan struct{}, *maxConcurrentRequests)
 
 	vmalertproxy.Init(*vmalertProxyURL)
-	flagutil.RegisterSecretFlag("vmalert.proxyURL")
 
 	internalselect.Init()
 }
