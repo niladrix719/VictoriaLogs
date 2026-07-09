@@ -61,6 +61,13 @@ describe("tokenize", () => {
     it("does not treat words which merely start with a digit as numbers", () => {
       expect(typed("_time:2025-04-10T23 3rd", TokenType.Number)).toEqual([]);
     });
+
+    it("rejects a long digit-prefixed word without backtracking", () => {
+      const word = `${"1".repeat(500)}z`;
+      const start = performance.now();
+      expect(typed(word, TokenType.Number)).toEqual([]);
+      expect(performance.now() - start).toBeLessThan(100);
+    });
   });
 
   describe("fields", () => {

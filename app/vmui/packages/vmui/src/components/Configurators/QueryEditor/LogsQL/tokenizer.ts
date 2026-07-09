@@ -9,7 +9,9 @@ const OPERATOR_CHARS = new Set([":", "=", "~", "!", "<", ">", "*", ",", "(", ")"
 const COMMENT_CHAR = "#";
 const PIPE_CHAR = "|";
 
-const NUMBER_REGEXP = /^-?(?:\d[\d_]*(?:\.[\d_]+)?(?:ns|µs|us|ms|KiB|MiB|GiB|TiB|KB|MB|GB|TB|Ki|Mi|Gi|Ti|[BKMGTsmhdwy])?)+$/;
+const NUMBER_UNIT = "(?:ns|µs|us|ms|KiB|MiB|GiB|TiB|KB|MB|GB|TB|Ki|Mi|Gi|Ti|[BKMGTsmhdwy])";
+const NUMBER_PART = "\\d[\\d_]*(?:\\.[\\d_]+)?";
+const NUMBER_REGEXP = new RegExp(`^-?(?:${NUMBER_PART}${NUMBER_UNIT})*${NUMBER_PART}${NUMBER_UNIT}?$`);
 
 const FIELD_OPERATOR_REGEXP = /^(?:[:=]|![=~])/;
 
