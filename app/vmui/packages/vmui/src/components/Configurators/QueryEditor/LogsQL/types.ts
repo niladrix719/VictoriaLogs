@@ -37,3 +37,20 @@ export enum ContextType {
   Unknown = "Unknown",
   FilterOrPipeName = "FilterOrPipeName",
 }
+
+export enum TokenType {
+  Comment = "comment",
+  String = "string",
+  Number = "number",
+  Keyword = "keyword",
+  Pipe = "pipe",
+  Function = "function",
+  Field = "field",
+  Operator = "operator",
+  Text = "text",
+}
+
+export interface Token {
+  type: TokenType;
+  value: string;
+}

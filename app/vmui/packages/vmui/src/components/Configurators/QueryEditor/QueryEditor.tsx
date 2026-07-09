@@ -8,6 +8,7 @@ import useDeviceDetect from "../../../hooks/useDeviceDetect";
 import { useQueryState } from "../../../state/query/QueryStateContext";
 import debounce from "lodash.debounce";
 import { toggleLineComment } from "./LogsQL/utils";
+import LogsQueryEditorHighlight from "./LogsQL/LogsQueryEditorHighlight";
 import QueryEditorHotkeysTip from "./QueryEditorHotkeysTip";
 import { formatRequestDuration } from "../../../utils/time";
 
@@ -156,6 +157,7 @@ const QueryEditor: FC<QueryEditorProps> = ({
         disabled={disabled}
         inputmode={"search"}
         caretPosition={caretPositionInput}
+        highlight={<LogsQueryEditorHighlight value={value}/>}
         endIcon={<QueryEditorHotkeysTip/>}
       />
       {autocomplete && AutocompleteEl && (

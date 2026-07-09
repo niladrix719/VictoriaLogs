@@ -24,6 +24,17 @@ $color-dodger-blue: #1A90FF;
 $color-tropical-blue: #C9E3F6;
 
 
+/************* LogsQL syntax highlighting *************/
+$color-logsql-comment: var(--color-logsql-comment);
+$color-logsql-string: var(--color-logsql-string);
+$color-logsql-number: var(--color-logsql-number);
+$color-logsql-keyword: var(--color-logsql-keyword);
+$color-logsql-pipe: var(--color-logsql-pipe);
+$color-logsql-function: var(--color-logsql-function);
+$color-logsql-field: var(--color-logsql-field);
+$color-logsql-operator: var(--color-logsql-operator);
+
+
 /************* background *************/
 $color-background-body: var(--color-background-body);
 $color-background-block: var(--color-background-block);

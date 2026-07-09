@@ -12,6 +12,42 @@
     visibility: hidden;
   }
 
+  .vm-logsql-highlight {
+    &__token {
+      &_comment {
+        color: $color-logsql-comment;
+      }
+
+      &_string {
+        color: $color-logsql-string;
+      }
+
+      &_number {
+        color: $color-logsql-number;
+      }
+
+      &_keyword {
+        color: $color-logsql-keyword;
+      }
+
+      &_pipe {
+        color: $color-logsql-pipe;
+      }
+
+      &_function {
+        color: $color-logsql-function;
+      }
+
+      &_field {
+        color: $color-logsql-field;
+      }
+
+      &_operator {
+        color: $color-logsql-operator;
+      }
+    }
+  }
+
   &-help-tooltip {
     &-item {
       display: grid;

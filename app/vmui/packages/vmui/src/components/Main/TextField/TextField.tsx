@@ -33,6 +33,7 @@ interface TextFieldProps {
   helperText?: string
   inputmode?: "search" | "text" | "email" | "tel" | "url" | "none" | "numeric" | "decimal"
   caretPosition?: [number, number]
+  highlight?: ReactNode
   onChange?: (value: string) => void
   onEnter?: () => void
   onKeyDown?: (e: TextFieldKeyboardEvent) => void
@@ -56,6 +57,7 @@ const TextField: FC<TextFieldProps> = forwardRef<HTMLInputElement | HTMLTextArea
     autofocus = false,
     inputmode = "text",
     caretPosition,
+    highlight,
     onChange,
     onEnter,
     onKeyDown,
@@ -72,6 +74,8 @@ const TextField: FC<TextFieldProps> = forwardRef<HTMLInputElement | HTMLTextArea
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fieldRef = useMemo(() => type === "textarea" ? textareaRef : inputRef, [type]);
 
+  const isHighlighted = type === "textarea" && Boolean(highlight);
+
   const inputClasses = classNames({
     "vm-text-field__input": true,
     "vm-text-field__input_error": error,
@@ -79,6 +83,7 @@ const TextField: FC<TextFieldProps> = forwardRef<HTMLInputElement | HTMLTextArea
     "vm-text-field__input_icon-start": startIcon,
     "vm-text-field__input_disabled": disabled,
     "vm-text-field__input_textarea": type === "textarea",
+    "vm-text-field__input_highlighted": isHighlighted,
   });
 
   const updateCaretPosition = (target: HTMLInputElement | HTMLTextAreaElement) => {
@@ -169,6 +174,7 @@ const TextField: FC<TextFieldProps> = forwardRef<HTMLInputElement | HTMLTextArea
     >
       {startIcon && <div className="vm-text-field__icon-start">{startIcon}</div>}
       {endIcon && <div className="vm-text-field__icon-end">{endIcon}</div>}
+      {isHighlighted && <div className="vm-text-field__highlight">{highlight}</div>}
       {type === "textarea"
         ? (
           <textarea

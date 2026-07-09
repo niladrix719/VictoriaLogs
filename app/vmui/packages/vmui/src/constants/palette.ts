@@ -22,6 +22,15 @@ export const darkPalette = {
   "color-log-hits-bar-3": "#64B5F6",
   "color-log-hits-bar-4": "#E57373",
   "color-log-hits-bar-5": "#8a62f0",
+  // LogsQL syntax highlighting
+  "color-logsql-comment": "#768390",
+  "color-logsql-string": "#96D0FF",
+  "color-logsql-number": "#8DDB8C",
+  "color-logsql-keyword": "#F47067",
+  "color-logsql-pipe": "#DCBDFB",
+  "color-logsql-function": "#F69D50",
+  "color-logsql-field": "#6CB6FF",
+  "color-logsql-operator": "#909DAB",
 };
 
 export const lightPalette = {
@@ -48,4 +57,13 @@ export const lightPalette = {
   "color-log-hits-bar-3": "#64B5F6",
   "color-log-hits-bar-4": "#E57373",
   "color-log-hits-bar-5": "#8a62f0",
+  // LogsQL syntax highlighting
+  "color-logsql-comment": "#6E7781",
+  "color-logsql-string": "#0A3069",
+  "color-logsql-number": "#1A7F37",
+  "color-logsql-keyword": "#CF222E",
+  "color-logsql-pipe": "#8250DF",
+  "color-logsql-function": "#953800",
+  "color-logsql-field": "#0550AE",
+  "color-logsql-operator": "#57606A",
 };
