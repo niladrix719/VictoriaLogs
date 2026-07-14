@@ -57,6 +57,7 @@ func (sv *statsValues) newStatsProcessor(a *chunkedAllocator) statsProcessor {
 
 	svp := a.newStatsValuesTopkProcessor()
 	svp.sortFieldsLen = sortFieldsLen
+	svp.h.sortFields = sv.sortFields
 	return svp
 }
 

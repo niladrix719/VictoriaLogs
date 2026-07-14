@@ -19,7 +19,6 @@ type statsValuesTopkProcessor struct {
 func (svp *statsValuesTopkProcessor) updateStatsForAllRows(sf statsFunc, br *blockResult) int {
 	sv := sf.(*statsValues)
 
-	svp.h.sortFields = sv.sortFields
 	svp.initSortColumns(br, sv.sortFields)
 
 	stateSizeIncrease := 0
@@ -35,7 +34,6 @@ func (svp *statsValuesTopkProcessor) updateStatsForAllRows(sf statsFunc, br *blo
 func (svp *statsValuesTopkProcessor) updateStatsForRow(sf statsFunc, br *blockResult, rowIdx int) int {
 	sv := sf.(*statsValues)
 
-	svp.h.sortFields = sv.sortFields
 	svp.initSortColumns(br, sv.sortFields)
 
 	mc := getMatchingColumns(br, sv.fieldFilters)

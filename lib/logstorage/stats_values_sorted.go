@@ -60,7 +60,6 @@ func (svp *statsValuesSortedProcessor) updateStateForRow(br *blockResult, cs []*
 	return stateSizeIncrease
 }
 
-// newStatsValuesSortedEntry returns an entry holding the raw value with the given sortValues.
 func newStatsValuesSortedEntry(value string, sortValues []string) *statsJSONValuesSortedEntry {
 	sortValuesCopy := make([]string, len(sortValues))
 	for i, v := range sortValues {
