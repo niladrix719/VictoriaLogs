@@ -40,6 +40,7 @@ Integration and Data Collection:
 * [How to Extend Percona Monitoring and Management to Add Logging Functionality](https://www.percona.com/blog/how-to-extend-percona-monitoring-and-management-to-add-logging-functionality/)
 * [Getting Victoria Logs running on FreeBSD](https://dan.langille.org/2026/06/14/getting-victoria-logs-running-on-freebsd/)
 * [Getting Nginx logs into Victoria-Logs](https://dan.langille.org/2026/06/17/getting-nginx-logs-into-victoria-logs/)
+* [Easy Mode Monitoring and Logging with Shiftmon](https://www.wearedevelopers.com/en/videos/2114/easy-mode-monitoring-and-logging-with-shiftmon)
 
 Grafana and Visualization:
 
