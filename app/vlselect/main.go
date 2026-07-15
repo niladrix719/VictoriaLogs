@@ -43,7 +43,8 @@ var (
 )
 
 // InitSecretFlags registers secret flags defined under `vlselect` pkg.
-// It has to be called after flag.Parse and before any logging by main function of an application (e.g. victoria-logs, vlagent).
+//
+// It must be called after flag.Parse and before any logging by main function of an application (e.g. victoria-logs, vlagent).
 func InitSecretFlags() {
 	flagutil.RegisterSecretFlag("vmalert.proxyURL")
 }
