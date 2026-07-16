@@ -22,6 +22,10 @@ according to the following docs:
 
 ## tip
 
+## [v1.52.0](https://github.com/VictoriaMetrics/VictoriaLogs/releases/tag/v1.52.0)
+
+Released at 2026-07-16
+
 **Update note 1:** the base Docker image has been changed from [Alpine](https://www.alpinelinux.org/) to [distroless](https://github.com/googlecontainertools/distroless) in order to reduce an attack surface (The `distroless` base image doesn't contain any executables contrary to the Alpine base image). For debugging VictoriaLogs containers in Kubernetes it is recommended to use [`kubectl debug`](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_debug/).
 
 **Update note 2:** VictoriaLogs no longer provides a Docker image for the `linux/386` platform because the `distroless` base image [doesn't support this platform](https://github.com/GoogleContainerTools/distroless/issues/881). Executable files for `linux/386` platform are still published at [the VictoriaLogs releases page](https://github.com/VictoriaMetrics/VictoriaLogs/releases).
