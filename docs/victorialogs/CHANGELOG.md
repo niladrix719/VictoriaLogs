@@ -21,6 +21,8 @@ according to the following docs:
 * [How to build vlagent from source code](https://docs.victoriametrics.com/victorialogs/vlagent/#building-from-source-code)
 
 ## tip
+* FEATURE: [web UI](https://docs.victoriametrics.com/victorialogs/querying/#web-ui): add Quick start examples to autocomplete suggestions and show recent query history items alongside field and value suggestions. See [#1498](https://github.com/VictoriaMetrics/VictoriaLogs/issues/1498).
+* FEATURE: [web UI](https://docs.victoriametrics.com/victorialogs/querying/#web-ui): persist query history in browser local storage and show the last run time for history items. See [#1498](https://github.com/VictoriaMetrics/VictoriaLogs/issues/1498).
 
 
 **Update note 1:** the base Docker image has been changed from [Alpine](https://www.alpinelinux.org/) to [distroless](https://github.com/googlecontainertools/distroless) in order to reduce an attack surface (The `distroless` base image doesn't contain any executables contrary to the Alpine base image). For debugging VictoriaLogs containers in Kubernetes it is recommended to use [`kubectl debug`](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_debug/).

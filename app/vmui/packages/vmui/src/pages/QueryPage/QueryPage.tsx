@@ -17,7 +17,7 @@ import ExtraFiltersPanel from "../../components/ExtraFilters/ExtraFiltersPanel/E
 import useDeviceDetect from "../../hooks/useDeviceDetect";
 import QueryPageAlerts from "./QueryPageAlerts";
 import { useTimePeriod } from "./hooks/useTimePeriod";
-import { useQueryController } from "./hooks/useQueryController";
+import { DEFAULT_QUERY, useQueryController } from "./hooks/useQueryController";
 import { useQueryPageController } from "./hooks/useQueryPageController";
 
 const QueryPage: FC = () => {
@@ -42,22 +42,20 @@ const QueryPage: FC = () => {
   const { extraFilters, extraParams, addNewFilter, removeFilterByValue, removeFilterByField } = useExtraFilters();
   const { isVisible: isVisibleFilterSidebar, setHidden: onCloseFilterSidebar } = useFilterSidebarVisible();
 
-  const handleUpdateQuery = () => {
-    if (!inputQueryRef.current) {
-      setQueryError(ErrorTypes.validQuery);
-      return;
-    }
+  const handleUpdateQuery = (nextQuery?: string) => {
+    const queryToApply = (nextQuery ?? inputQueryRef.current).trim() || DEFAULT_QUERY;
+
     setQueryError("");
 
-    applyQuery();
+    applyQuery(queryToApply);
     queryDispatch({ type: "RUN_QUERY" });
   };
 
-  const handleExecuteQuery = () => {
+  const handleExecuteQuery = (nextQuery?: string) => {
     if (isLoading) {
       cancelAll();
     } else {
-      handleUpdateQuery();
+      handleUpdateQuery(nextQuery);
     }
   };
 
