@@ -387,13 +387,13 @@ func (s *Storage) AddRow(streamHash uint64, r *logstorage.InsertRow) {
 func (s *Storage) sendInsertRequestToAnyNode(pendingData *bytesutil.ByteBuffer) bool {
 	// collect available storage node indexes
 	availableIdx := make([]int, 0, len(s.sns))
-
 	currentTime := fasttime.UnixTimestamp()
 	for idx, sn := range s.sns {
-		if sn.disabledUntil.Load() < currentTime {
+		if sn.disabledUntil.Load() <= currentTime {
 			availableIdx = append(availableIdx, idx)
 		}
 	}
+
 	// pick a random start position and reroute the data
 	startIdx := int(fastrand.Uint32n(uint32(len(availableIdx))))
 	for i := range availableIdx {
