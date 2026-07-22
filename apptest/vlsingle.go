@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/VictoriaMetrics/VictoriaLogs/app/vlstorage/netinsert"
 	"github.com/VictoriaMetrics/VictoriaLogs/lib/logstorage"
 )
 
@@ -109,7 +110,7 @@ func (app *Vlsingle) JSONLineWrite(t *testing.T, records []string, opts IngestOp
 
 	_, statusCode := app.node.cli.PostWithTenant(t, opts.AccountID, opts.ProjectID, url, "text/plain", data)
 	if statusCode != http.StatusOK {
-		t.Fatalf("unexpected status code: got %d, want %d", statusCode, http.StatusOK)
+		t.Fatalf("unexpected status code when sending data to %s: got %d, want %d", url, statusCode, http.StatusOK)
 	}
 }
 
@@ -125,10 +126,13 @@ func (app *Vlsingle) NativeWrite(t *testing.T, records []logstorage.InsertRow, o
 	}
 	dstURL := fmt.Sprintf("http://%s/insert/native", app.node.httpListenAddr)
 	uv := opts.asURLValues()
-	uv.Add("version", "v1")
+	uv.Add("version", netinsert.ProtocolVersion)
 	dstURL += "?" + uv.Encode()
 
-	app.node.cli.Post(t, dstURL, "application/octet-stream", data)
+	_, statusCode := app.node.cli.Post(t, dstURL, "application/octet-stream", data)
+	if statusCode != http.StatusOK {
+		t.Fatalf("unexpected status code when sending data to %s: got %d, want %d", dstURL, statusCode, http.StatusOK)
+	}
 }
 
 // LogsQLQuery sends HTTP POST request to /select/logsql/query endpoint.
@@ -138,8 +142,8 @@ func (app *Vlsingle) LogsQLQuery(t *testing.T, query string, opts QueryOpts) *Lo
 	t.Helper()
 
 	res, statusCode := app.LogsQLQueryRaw(t, query, opts)
-	if statusCode != 200 {
-		t.Fatalf("unexpected response status code: %d; want 200; response\n%s", statusCode, res)
+	if statusCode != http.StatusOK {
+		t.Fatalf("unexpected response status code for query %q: got %d; want %d; response\n%s", query, statusCode, http.StatusOK, res)
 	}
 	return NewLogsQLQueryResponse(t, res)
 }
