@@ -164,7 +164,6 @@ func (app *Vlagent) remoteWriteBlocksSent(t *testing.T) int {
 
 func (app *Vlagent) remoteWriteRowsPushed(t *testing.T) int {
 	total := 0.0
-	// vlagent_remotewrite_blocks_sent_total
 	for _, v := range app.GetMetricsByPrefix(t, "vlagent_remotewrite_block_size_rows_sum") {
 		total += v
 	}
