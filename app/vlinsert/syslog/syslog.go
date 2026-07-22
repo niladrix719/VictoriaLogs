@@ -622,7 +622,7 @@ var msgFields = []string{"message"}
 var (
 	errorsTotal = metrics.NewCounter(`vl_errors_total{type="syslog"}`)
 
-	udpRequestsTotal = metrics.NewCounter(`vl_udp_reqests_total{type="syslog"}`)
+	udpRequestsTotal = metrics.NewCounter(`vl_udp_requests_total{type="syslog"}`)
 	udpErrorsTotal   = metrics.NewCounter(`vl_udp_errors_total{type="syslog"}`)
 )
 
