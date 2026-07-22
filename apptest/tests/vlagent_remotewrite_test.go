@@ -91,6 +91,7 @@ func TestVlagentRemoteWriteMultiTenant(t *testing.T) {
 		AccountID:    "1",
 		StreamFields: "foo,bar",
 	})
+	vlagent.WaitRemoteWriteRequests(t, "1:"+remoteWriteURL, 2)
 
 	sut.ForceFlush(t)
 
