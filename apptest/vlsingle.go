@@ -129,7 +129,7 @@ func (app *Vlsingle) NativeWrite(t *testing.T, records []logstorage.InsertRow, o
 	uv.Add("version", netinsert.ProtocolVersion)
 	dstURL += "?" + uv.Encode()
 
-	_, statusCode := app.node.cli.Post(t, dstURL, "application/octet-stream", data)
+	_, statusCode := app.node.cli.PostWithTenant(t, opts.AccountID, opts.ProjectID, dstURL, "application/octet-stream", data)
 	if statusCode != http.StatusOK {
 		t.Fatalf("unexpected status code when sending data to %s: got %d, want %d", dstURL, statusCode, http.StatusOK)
 	}
