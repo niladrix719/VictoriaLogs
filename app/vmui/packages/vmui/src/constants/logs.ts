@@ -32,7 +32,16 @@ export const LOGS_URL_PARAMS = {
   COMPACT_GROUP_HEADER: "compactGroupHeader",
   ROWS_PER_PAGE: "rows_per_page",
   COLUMNS: "columns",
+  SORT_ORDER: "sortOrder",
 };
+
+// Sort order of the logs by the `_time` field.
+export const LOGS_SORT_ORDER = {
+  DESC: "desc",
+  ASC: "asc",
+} as const;
+
+export const LOGS_DEFAULT_SORT_ORDER = LOGS_SORT_ORDER.DESC;
 
 // Maximum values for the logs autocomplete.
 export const MAX_QUERY_FIELDS = 1;

@@ -1,10 +1,10 @@
 import { ContextData, ContextType, LogicalPart, LogicalPartPosition, LogicalPartType } from "../types";
 import { pipeOptions } from "./pipes";
+import { findUnclosedQuoteIndex, isEscapedAt, QUOTE_CHARS } from "../../../../../utils/logsql";
 
 const BUILDER_OPERATORS = ["AND", "OR", "NOT"];
 const PIPE_NAMES = pipeOptions.map(p => p.value);
 
-const QUOTE_CHARS = ["'", "\"", "`"];
 const OPENING_BRACKETS = ["(", "[", "{"];
 const CLOSING_BRACKETS = [")", "]", "}"];
 const BRACKETS = [...OPENING_BRACKETS, ...CLOSING_BRACKETS];
@@ -33,7 +33,7 @@ export const splitLogicalParts = (expr: string) => {
     }
 
     // Quotes: only open when not inside, only close when matches expectedQuote
-    if (QUOTE_CHARS.includes(char) && !isEscaped(input, i)) {
+    if (QUOTE_CHARS.includes(char) && !isEscapedAt(input, i)) {
       if (!insideQuotes) {
         insideQuotes = true;
         expectedQuote = char;
@@ -223,35 +223,11 @@ const handleFilterOrPipeType = (
   }
 };
 
-const isEscaped = (s: string, i: number) => {
-  let bs = 0;
-  for (let j = i - 1; j >= 0 && s[j] === "\\"; j--) bs++;
-  return bs % 2 === 1;
-};
-
 export const hasBalancedQuotes = (s: string) => {
-  let inQuote: (typeof QUOTE_CHARS)[number] | null = null;
-  let openedAt: number | null = null;
-
-  for (let i = 0; i < s.length; i++) {
-    const char = s[i];
-
-    if (QUOTE_CHARS.includes(char) && !isEscaped(s, i)) {
-      if (inQuote === null) {
-        inQuote = char as (typeof QUOTE_CHARS)[number];
-        openedAt = i;
-        continue;
-      }
-
-      if (char === inQuote) {
-        inQuote = null;
-        openedAt = null;
-      }
-    }
-  }
+  const openedAt = findUnclosedQuoteIndex(s);
 
   return {
-    isBalancedQuotes: inQuote === null,
+    isBalancedQuotes: openedAt === null,
     unclosedQuoteIndex: openedAt,
   };
 };

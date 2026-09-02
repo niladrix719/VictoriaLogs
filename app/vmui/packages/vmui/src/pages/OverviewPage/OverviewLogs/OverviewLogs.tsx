@@ -153,6 +153,7 @@ const OverviewLogs:FC = () => {
           <QueryPageBody
             isPreview
             data={logs}
+            query={query}
             isLoading={isLoading}
           />
         )}

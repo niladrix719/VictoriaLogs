@@ -130,6 +130,7 @@ const QueryPage: FC = () => {
         )}
         <QueryPageBody
           data={logsRequestState.logs}
+          query={appliedQuery}
           queryParams={logsRequestState.queryParams}
           isLoading={logsRequestState.isLoading}
         />

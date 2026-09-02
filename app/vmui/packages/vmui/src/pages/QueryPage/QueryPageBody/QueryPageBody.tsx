@@ -24,9 +24,11 @@ import Tooltip from "../../../components/Main/Tooltip/Tooltip";
 import Button from "../../../components/Main/Button/Button";
 import { useSearchParams } from "react-router-dom";
 import DownloadLogsModal from "../../../components/DownloadLogs/DownloadLogsModal";
+import LogsSortOrderToggle from "../../../components/Configurators/LogsSortOrderController/LogsSortOrderToggle";
 
 interface Props {
   data: Logs[];
+  query: string;
   queryParams?: Record<string, string>;
   isLoading: boolean;
   isPreview?: boolean;
@@ -46,7 +48,7 @@ const tabs = [
   { label: "Live", value: DisplayType.liveTailing, icon: <PlayIcon/>, Component: LiveTailingView },
 ];
 
-const QueryPageBody: FC<Props> = ({ data, queryParams, isLoading, isPreview }) => {
+const QueryPageBody: FC<Props> = ({ data, query, queryParams, isLoading, isPreview }) => {
   const { isMobile } = useDeviceDetect();
   const { setSearchParamsFromKeys } = useSearchParamsFromObject();
   const [activeTab, setActiveTab] = useStateSearchParams(DisplayType.group, "view");
@@ -106,6 +108,7 @@ const QueryPageBody: FC<Props> = ({ data, queryParams, isLoading, isPreview }) =
         })}
         >
           <div ref={settingsRef}/>
+          {!isPreview && activeTab !== DisplayType.liveTailing && <LogsSortOrderToggle query={query}/>}
           <DownloadLogsModal queryParams={queryParams}>
             <Tooltip title="Download Logs">
               <Button
