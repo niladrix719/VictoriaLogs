@@ -117,19 +117,20 @@ func (pfp *pipeFieldNamesProcessor) writeBlock(workerID uint, br *blockResult) {
 		return
 	}
 
-	// Assume that the column is set for all the rows in the block.
-	// This is much faster than reading all the column values and counting non-empty rows.
-	hits := uint64(br.rowsLen)
-
 	filter := pfp.pf.filter
 
 	shard := pfp.shards.Get(workerID)
-	if !pfp.pf.isFirstPipe || br.bs == nil || br.bs.partFormatVersion() < 1 {
+	if !pfp.pf.isFirstPipe || br.bs == nil || br.bs.partFormatVersion() < 1 || !br.isFull() {
+		br.ensureAllColumnsLoaded()
+
 		cs := br.getColumns()
 		for _, c := range cs {
-			shard.updateColumnHits(c.name, filter, hits)
+			shard.updateColumnHits(c.name, filter, c.countNonEmptyValues(br))
 		}
 	} else {
+		// Assume that every column in the block header is set for all the selected rows.
+		// This avoids reading the column values. It is safe only because br.isFull() is true here.
+		hits := uint64(br.rowsLen)
 		cshIndex := br.bs.getColumnsHeaderIndex()
 		shard.updateHits(cshIndex.columnHeadersRefs, br, filter, hits)
 		shard.updateHits(cshIndex.constColumnsRefs, br, filter, hits)
@@ -150,6 +151,9 @@ func (shard *pipeFieldNamesProcessorShard) updateHits(refs []columnHeaderRef, br
 }
 
 func (shard *pipeFieldNamesProcessorShard) updateColumnHits(columnName, filter string, hits uint64) {
+	if hits == 0 {
+		return
+	}
 	if columnName == "" {
 		columnName = "_msg"
 	}

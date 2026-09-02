@@ -48,40 +48,7 @@ func (scp *statsCountProcessor) updateStatsForAllRows(sf statsFunc, br *blockRes
 	if isSingleField(sc.fieldFilters) {
 		// Fast path for count(single_column)
 		c := br.getColumnByName(sc.fieldFilters[0])
-		if c.isConst {
-			if c.valuesEncoded[0] != "" {
-				scp.rowsCount += uint64(br.rowsLen)
-			}
-			return 0
-		}
-		if c.isTime {
-			scp.rowsCount += uint64(br.rowsLen)
-			return 0
-		}
-		switch c.valueType {
-		case valueTypeString:
-			for _, v := range c.getValuesEncoded(br) {
-				if v != "" {
-					scp.rowsCount++
-				}
-			}
-		case valueTypeDict:
-			zeroDictIdx := slices.Index(c.dictValues, "")
-			if zeroDictIdx < 0 {
-				scp.rowsCount += uint64(br.rowsLen)
-				return 0
-			}
-			for _, v := range c.getValuesEncoded(br) {
-				if int(v[0]) != zeroDictIdx {
-					scp.rowsCount++
-				}
-			}
-		case valueTypeUint8, valueTypeUint16, valueTypeUint32, valueTypeUint64, valueTypeInt64,
-			valueTypeFloat64, valueTypeIPv4, valueTypeTimestampISO8601:
-			scp.rowsCount += uint64(br.rowsLen)
-		default:
-			logger.Panicf("BUG: unknown valueType=%d", c.valueType)
-		}
+		scp.rowsCount += c.countNonEmptyValues(br)
 		return 0
 	}
 

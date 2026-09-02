@@ -388,6 +388,21 @@ func (br *blockResult) initColumns(pf *prefixfilter.Filter) {
 	br.csInitFast()
 }
 
+// allFieldsFilter matches all the fields.
+var allFieldsFilter = func() *prefixfilter.Filter {
+	var f prefixfilter.Filter
+	f.AddAllowFilter("*")
+	return &f
+}()
+
+// ensureAllColumnsLoaded loads all the columns in br unless they are already loaded.
+func (br *blockResult) ensureAllColumnsLoaded() {
+	if br.bs == nil || len(br.csBuf) > 0 {
+		return
+	}
+	br.initColumns(allFieldsFilter)
+}
+
 func (br *blockResult) initColumnsByFields(fields []string) {
 	for _, f := range fields {
 		switch f {
@@ -2641,6 +2656,48 @@ func (c *blockResultColumn) sumLenStringValues(br *blockResult) uint64 {
 		n += uint64(len(v))
 	}
 	return n
+}
+
+// countNonEmptyValues returns the number of rows in br with non-empty value in the column c.
+func (c *blockResultColumn) countNonEmptyValues(br *blockResult) uint64 {
+	if c.isConst {
+		if c.valuesEncoded[0] != "" {
+			return uint64(br.rowsLen)
+		}
+		return 0
+	}
+	if c.isTime {
+		return uint64(br.rowsLen)
+	}
+
+	switch c.valueType {
+	case valueTypeString:
+		n := uint64(0)
+		for _, v := range c.getValuesEncoded(br) {
+			if v != "" {
+				n++
+			}
+		}
+		return n
+	case valueTypeDict:
+		zeroDictIdx := slices.Index(c.dictValues, "")
+		if zeroDictIdx < 0 {
+			return uint64(br.rowsLen)
+		}
+		n := uint64(0)
+		for _, v := range c.getValuesEncoded(br) {
+			if int(v[0]) != zeroDictIdx {
+				n++
+			}
+		}
+		return n
+	case valueTypeUint8, valueTypeUint16, valueTypeUint32, valueTypeUint64, valueTypeInt64,
+		valueTypeFloat64, valueTypeIPv4, valueTypeTimestampISO8601:
+		return uint64(br.rowsLen)
+	default:
+		logger.Panicf("BUG: unknown valueType=%d", c.valueType)
+		return 0
+	}
 }
 
 func (c *blockResultColumn) sumValues(br *blockResult) (float64, int) {
